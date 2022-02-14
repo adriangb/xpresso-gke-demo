@@ -14,8 +14,7 @@ def test_health() -> None:
     with app.dependency_overrides as overrides:
         overrides[ConnectionHealth] = FakeHealth
 
-        client = TestClient(app)
-        resp = client.get("/health")
-
-        assert resp.status_code == 200, resp.content
+        with TestClient(app) as client:
+            resp = client.get("/health")
+            assert resp.status_code == 200, resp.content
         assert resp.json() == {"db": {"connected": True}}
