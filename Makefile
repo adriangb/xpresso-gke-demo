@@ -15,7 +15,7 @@ install-poetry: .install-poetry
 .init: .install-poetry
 	@echo "---- 📦 Building package ----"
 	rm -rf .venv
-	pip install -U pip wheel
+	python -m pip install -U pip wheel
 	poetry install
 	git init .
 	poetry run pre-commit install --install-hooks
