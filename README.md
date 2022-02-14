@@ -72,7 +72,7 @@ Set the required configuration variables for this program:
 ```shell
 pulumi config set xpresso-gke-demo:projectId [your-gcp-project-here]
 pulumi config set xpresso-gke-demo:region us-west1 # any valid region
-pulumi confit set xpresso-GKE-demo:appPort 8000  # unless you change the app
+pulumi confit set xpresso-gke-demo:appPort 8000  # unless you change the app
 ```
 
 ### Deploy
