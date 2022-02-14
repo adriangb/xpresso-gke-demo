@@ -35,16 +35,3 @@ lint: .init
 test: .init
 	@echo ---- ⏳ Running tests ----
 	@(poetry run pytest -v --cov --cov-report term && echo "---- ✅ Tests passed ----" && exit 0 || echo "---- ❌ Tests failed ----" && exit 1)
-
-test-mutation: .init
-	@echo ---- ⏳ Running mutation testing ----
-	@poetry run python -m pip install mutmut
-	@(poetry run pytest --cov && poetry run mutmut run --use-coverage && echo "---- ✅ Passed ----" && exit 0 || echo "---- ❌ Failed ----" && exit 1)
-
-docs-serve: .init
-	@echo ---- 📝 Serving docs ----
-	@poetry run mkdocs serve --dev-addr localhost:8001
-
-docs-deploy: .init
-	@echo ---- 🚀 Deploying docs ----
-	@(poetry run mike deploy --push --update-aliases --branch gh-docs $(shell poetry version -s) latest && echo "---- ✅ Deploy succeeded ----" && exit 0 || echo "---- ❌ Deploy failed ----" && exit 1)
