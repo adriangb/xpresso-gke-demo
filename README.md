@@ -141,3 +141,16 @@ To run linting manually (without committing):
 ```shell
 make lint
 ```
+
+### Versioning
+
+So that we can include info about the project version in our infra (in particular, we want the version in the image tag) we keep the source of truth in a `VERSION.txt` file.
+This is also convenient to programmatically check for version bumps (for example in CI).
+
+This version is synced to the Python package version (in `pyproject.toml`) via a pre-commit hook.
+
+### Dependency specification
+
+Dependencies are specified in `pyproject.toml` and managed by Poetry.
+But we don't want to have to install Poetry to build the image, so we export Poetry's lockfile to a `app/requirements.txt` via a pre-commit hook.
+Then when we build the image we can just `pip install -r app/requirements.txt`.
