@@ -70,7 +70,7 @@ const appContainer = {
   resources: {
     requests: {
       cpu: "250m",
-      memory: "512MiB",
+      memory: "512Mi",
     },
   },
 };
@@ -87,7 +87,7 @@ export const SQLProxyContainer = {
   resources: {
     requests: {
       cpu: "250m",
-      memory: "512MiB",
+      memory: "512Mi",
     },
   },
 };
@@ -122,35 +122,39 @@ const appService = new k8s.core.v1.Service(
   },
   { provider: cluster.provider }
 );
-export const HPA = new k8s.autoscaling.v2beta2.HorizontalPodAutoscaler("hpa", {
-  metadata: {
-    name: "hpa",
-  },
-  spec: {
-    scaleTargetRef: {
-      apiVersion: "apps/v1",
-      kind: "Deployment",
-      name: appDeployment.metadata.name,
+export const HPA = new k8s.autoscaling.v2beta2.HorizontalPodAutoscaler(
+  "hpa",
+  {
+    metadata: {
+      name: "hpa",
     },
-    // Choose at least 2 replicas for resiliency
-    minReplicas: 2,
-    // But a low max since this is a demo and we want to keep costs low
-    maxReplicas: 3,
-    metrics: [
-      {
-        type: "Resource",
-        resource: {
-          name: "cpu",
-          target: {
-            type: "Utilization",
-            // Arbitrary choice
-            averageUtilization: 35,
+    spec: {
+      scaleTargetRef: {
+        apiVersion: "apps/v1",
+        kind: "Deployment",
+        name: appDeployment.metadata.name,
+      },
+      // Choose at least 2 replicas for resiliency
+      minReplicas: 2,
+      // But a low max since this is a demo and we want to keep costs low
+      maxReplicas: 3,
+      metrics: [
+        {
+          type: "Resource",
+          resource: {
+            name: "cpu",
+            target: {
+              type: "Utilization",
+              // Arbitrary choice
+              averageUtilization: 35,
+            },
           },
         },
-      },
-    ],
+      ],
+    },
   },
-}, {parent: cluster.provider });
+  { parent: cluster.provider }
+);
 
 // Export the app deployment name so we can easily access it.
 export let appName = appDeployment.metadata.name;
