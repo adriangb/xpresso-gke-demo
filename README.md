@@ -25,7 +25,7 @@ This is installed as part of the
 As part of this example, we will setup and deploy a Kubernetes cluster on GKE.
 You may also want to install [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) if you would like to directly interact with the underlying Kubernetes cluster.
 
-## Running the Example
+## Deploying the Example
 
 ### Set up your GCP Project
 
@@ -44,11 +44,15 @@ gcloud services enable sqladmin.googleapis.com
 gcloud services enable container.googleapis.com
 ```
 
+### Configure Docker
+
 We'll be pushing a docker image to Artifact Registry, so configure docker for authentication:
 
 ```shell
 gcloud auth configure-docker
 ```
+
+### Configure Pulumi
 
 Now you're ready to get started with the repo.
 Clone the repo then cd into the infra directory:
@@ -70,11 +74,7 @@ pulumi config set xpresso-gke-demo:project [your-gcp-project-here]
 pulumi config set xpresso-gke-demo:region us-west1 # any valid region
 ```
 
-Since we will use Google's Artifact Registry for hosting the Docker image, we need to configure your machine's Docker to be able to authenticate with GCR:
-
-```shell
-gcloud auth configure-docker
-```
+### Deploy
 
 Deploy everything with the `pulumi up` command.
 This provisions all the GCP resources necessary, including your GKE cluster and database, as well as building and publishing your container image, all in a single gesture:
@@ -88,4 +88,56 @@ This will show you a preview, ask for confirmation, and then chug away at provis
 ```shell
 pulumi destroy
 pulumi stack rm
+```
+
+## Local Development
+
+This package comes set up with some basic facilities for local development:
+
+- Make targets for bootstrapping, testing and linting
+- Git hooks (via [pre-commit](https://pre-commit.com)) to do code formatting and syncing of derived files
+
+To set up locally you'll need to have Python 3.10 installed.
+If you're using [pyenv](https://github.com/pyenv/pyenv), remember to select the right Python version.
+
+### Bootstrapping
+
+Run:
+
+```shell
+make init
+```
+
+This will:
+
+- Create a virtual environment using [Poetry](https://python-poetry.org) and install all of the app's dependencies.
+- Install git hooks via pre-commit.
+
+### Testing
+
+Run:
+
+```shell
+make test
+```
+
+### Linting
+
+Linting will auto-run on each commit.
+To disable this for a single commit, run:
+
+```shell
+git commit -m "<commit message>" --no-verify
+```
+
+To disable this permanently:
+
+```shell
+poetry run pre-commit --uninstall
+```
+
+To run linting manually (without committing):
+
+```shell
+make lint
 ```
