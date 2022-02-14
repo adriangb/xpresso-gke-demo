@@ -99,7 +99,7 @@ const appDeployment = new k8s.apps.v1.Deployment(
   {
     spec: {
       selector: { matchLabels: appLabels },
-      replicas: 1,
+      replicas: 2,
       template: {
         metadata: { labels: appLabels },
         spec: {
