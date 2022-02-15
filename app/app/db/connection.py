@@ -1,11 +1,11 @@
 from typing import Annotated, AsyncGenerator
 
 import asyncpg  # type: ignore[import]
-from app.config import Config
+from app.config import DatabaseConfig
 from xpresso import Depends
 
 
-async def get_pool(config: Config) -> AsyncGenerator[asyncpg.Pool, None]:
+async def get_pool(config: DatabaseConfig) -> AsyncGenerator[asyncpg.Pool, None]:
     # password is optional:
     # - cloudsql proxy won't work with it
     # - docker run postgres won't work without it

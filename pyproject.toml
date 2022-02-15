@@ -15,10 +15,13 @@ uvicorn = { extras = ["standard"], version = "~0.17" }
 asyncpg = "~0.25"
 python-json-logger = "~2"
 orjson = "~3"
+argon2-cffi = "^21.3.0"
+itsdangerous = "^2.0.1"
+migri = {extras = ["postgresql"], version = "^0.6.3"}
 
 [tool.poetry.dev-dependencies]
 requests = "~2"     # for TestClient
-black = ">=22"
+black = {version = "*", allow-prereleases = true}
 pytest = "~7"
 pytest-sugar = "~0"
 pre-commit = "~2"
@@ -26,6 +29,7 @@ isort = "~5"
 flake8 = "~4"
 mypy = ">=0.931"
 pytest-cov = "~3"
+coverage = {extras = ["toml"], version = "^~6"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
