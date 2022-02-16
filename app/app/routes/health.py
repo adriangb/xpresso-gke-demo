@@ -17,4 +17,4 @@ async def health(db_health: ConnectionHealth) -> Health:
     return Health(db=DatabaseHealth(connected=await db_health.is_connected()))
 
 
-health_pathitem = Path("/health", get=health)
+path_item = Path("/health", get=health)

@@ -2,14 +2,16 @@ import random
 
 from httpx import AsyncClient, Response
 
-from app.models.schemas.users import UserWithToken
+from tests.integration.conftest import RegistedUserWithToken
 
 
 async def test_get(
-    test_client: AsyncClient, registered_users_with_tokens: list[UserWithToken]
+    test_client: AsyncClient, registered_users_with_tokens: list[RegistedUserWithToken]
 ) -> None:
     user = random.choice(registered_users_with_tokens)
-    expected_response = {"user": user.dict(by_alias=True)}
+    user_info = user.user.dict(by_alias=True, exclude={"id", "hashed_password"})
+    user_info["token"] = user.token
+    expected_response = {"user": user_info}
     resp: Response = await test_client.get(
         "/api/user", headers={"Authorization": f"Token {user.token}"}
     )
@@ -18,16 +20,14 @@ async def test_get(
 
 
 async def test_update(
-    test_client: AsyncClient, registered_users_with_tokens: list[UserWithToken]
+    test_client: AsyncClient, registered_users_with_tokens: list[RegistedUserWithToken]
 ) -> None:
     user = random.choice(registered_users_with_tokens)
     user = random.choice(registered_users_with_tokens)
-    expected_response = {
-        "user": {
-            **user.dict(by_alias=True),
-            **{"username": "John Snow"},
-        }
-    }
+    user_info = user.user.dict(by_alias=True, exclude={"id", "hashed_password"})
+    user_info["token"] = user.token
+    user_info["username"] = "John Snow"
+    expected_response = {"user": user_info}
     resp: Response = await test_client.put(
         "/api/user",
         json={"user": {"username": "John Snow"}},

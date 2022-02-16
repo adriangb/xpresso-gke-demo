@@ -12,6 +12,6 @@ api_routes = [
 api = Mount("/api", app=Router(routes=api_routes))
 
 routes = [
-    health.health_pathitem,
+    health.path_item,
     api,
 ]
