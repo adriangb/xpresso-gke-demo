@@ -4,9 +4,13 @@ from app.models.domain.users import User
 from pydantic import BaseModel, EmailStr, HttpUrl
 
 
-class UserInLogin(BaseModel):
+class UserInLoginInfo(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserInLogin(BaseModel):
+    user: UserInLoginInfo
 
 
 class UserCreateInfo(BaseModel):

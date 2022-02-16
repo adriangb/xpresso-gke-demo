@@ -7,11 +7,12 @@ from xpresso import FromJson, HTTPException, Path, status
 
 
 async def login(
-    user_info: FromJson[UserInLogin],
+    user: FromJson[UserInLogin],
     auth_service: AuthService,
     repo: UsersRepository,
     hasher: PasswordHasher,
 ) -> UserInResponse:
+    user_info = user.user
     # check that the user exists in the database
     maybe_user_in_db = await repo.get_user_by_email(email=user_info.email)
     if maybe_user_in_db is None:
@@ -47,4 +48,4 @@ async def login(
     )
 
 
-login_path_item = Path("/users/login", post=login)
+path_item = Path("/users/login", post=login)

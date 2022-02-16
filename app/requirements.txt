@@ -303,9 +303,9 @@ starlette==0.18.0; python_version >= "3.7" and python_version < "4" \
 typing-extensions==4.1.1; python_version >= "3.7" and python_version < "4" and python_full_version >= "3.6.1" \
     --hash=sha256:21c85e0fe4b9a155d0799430b0ad741cdce7e359660ccbd8b530613e8df88ce2 \
     --hash=sha256:1a9462dcc3347a79b1f1c0271fbe79e844580bb598bafa1ed208b94da3cdcd42
-uvicorn==0.17.4; python_version >= "3.7" \
-    --hash=sha256:e85872d84fb651cccc4c5d2a71cf7ead055b8fb4d8f1e78e36092282c0cf2aec \
-    --hash=sha256:25850bbc86195a71a6477b3e4b3b7b4c861fb687fb96912972ce5324472b1011
+uvicorn==0.17.5; python_version >= "3.7" \
+    --hash=sha256:8adddf629b79857b48b999ae1b14d6c92c95d4d7840bd86461f09bee75f1653e \
+    --hash=sha256:c04a9c069111489c324f427501b3840d306c6b91a77b00affc136a840a3f45f1
 uvloop==0.16.0; sys_platform != "win32" and sys_platform != "cygwin" and platform_python_implementation != "PyPy" and python_version >= "3.7" \
     --hash=sha256:6224f1401025b748ffecb7a6e2652b17768f30b1a6a3f7b44660e5b5b690b12d \
     --hash=sha256:30ba9dcbd0965f5c812b7c2112a1ddf60cf904c1c160f398e7eed3a6b82dcd9c \
