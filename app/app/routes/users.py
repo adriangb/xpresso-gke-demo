@@ -1,8 +1,9 @@
+from xpresso import FromJson, Path
+
 from app.db.repositories.users import UsersRepository
 from app.dependencies import PasswordHasher
 from app.models.domain.users import User
 from app.models.schemas.users import UserInCreate, UserInResponse
-from xpresso import FromJson, Path
 
 
 async def create_user(

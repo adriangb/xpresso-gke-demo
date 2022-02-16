@@ -4,10 +4,11 @@ from typing import Protocol
 from uuid import UUID
 
 import jwt
-from app.models.schemas.jwt import JWTUser, Token
 from pydantic import ValidationError
 from xpresso.encoders.api import Encoder
 from xpresso.encoders.json import JsonableEncoder
+
+from app.models.schemas.jwt import JWTUser, Token
 
 ALGORITHM = "HS256"
 ALGORITHMS = [ALGORITHM]

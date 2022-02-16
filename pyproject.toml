@@ -40,6 +40,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+known_first_party = ["app", "tests"]
 
 [tool.coverage.run]
 branch = true

@@ -1,10 +1,11 @@
+from xpresso import FromHeader, FromJson, HTTPException, Path, status
+
 from app.db.repositories.users import UsersRepository
 from app.dependencies import PasswordHasher
 from app.models.schemas.auth import Unauthorized
 from app.models.schemas.users import UserInResponse, UserInUpdate, UserWithToken
 from app.routes.utils import extract_token_from_authroization_header
 from app.services.auth import AuthService
-from xpresso import FromHeader, FromJson, HTTPException, Path, status
 
 
 async def get_user(

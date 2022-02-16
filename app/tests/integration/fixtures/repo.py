@@ -2,6 +2,7 @@ from typing import NamedTuple
 
 import asyncpg  # type: ignore[import]
 import pytest
+
 from app.db.repositories import users
 from app.models.domain.users import User
 from tests.hasher import password_hasher

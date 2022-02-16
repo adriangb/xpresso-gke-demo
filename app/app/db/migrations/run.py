@@ -1,8 +1,9 @@
 import asyncio
 import pathlib
 
-from app.config import DatabaseConfig
 from migri import PostgreSQLConnection, apply_migrations  # type: ignore[import]
+
+from app.config import DatabaseConfig
 
 
 async def main(config: DatabaseConfig) -> None:

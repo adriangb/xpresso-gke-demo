@@ -1,6 +1,7 @@
 import random
 
 from httpx import AsyncClient, Response
+
 from tests.integration.conftest import RegistedUserWithToken
 
 

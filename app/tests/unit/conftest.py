@@ -1,9 +1,10 @@
 from typing import Generator
 
 import pytest
+from xpresso import App
+
 from app.main import app
 from app.services import auth
-from xpresso import App
 
 
 @pytest.fixture

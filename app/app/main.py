@@ -2,13 +2,14 @@ import asyncio
 
 import asyncpg  # type: ignore[import]
 import uvicorn  # type: ignore[import]
+from xpresso import App
+
 from app.config import AppConfig, DatabaseConfig
 from app.db.connection import get_pool
 from app.db.migrations import run as migrations
 from app.logconfig import get_json_logconfig
 from app.routes import routes
 from app.services.auth import AuthService
-from xpresso import App
 
 app = App(routes=routes)
 

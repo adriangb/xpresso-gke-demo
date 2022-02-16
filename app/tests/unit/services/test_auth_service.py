@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 import pytest
+
 from app.models.schemas.jwt import Token
 from app.services.auth import AuthService, InvalidTokenError
 

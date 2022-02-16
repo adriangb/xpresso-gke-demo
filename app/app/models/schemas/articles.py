@@ -1,7 +1,8 @@
 from typing import List, Optional
 
-from app.models.domain.articles import Article
 from pydantic import BaseModel, Field
+
+from app.models.domain.articles import Article
 
 DEFAULT_ARTICLES_LIMIT = 20
 DEFAULT_ARTICLES_OFFSET = 0

@@ -1,7 +1,8 @@
 from typing import List
 
-from app.models.domain.comments import Comment
 from pydantic import BaseModel
+
+from app.models.domain.comments import Comment
 
 
 class ListOfCommentsInResponse(BaseModel):

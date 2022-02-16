@@ -1,7 +1,8 @@
 import random
 
-from app.models.schemas.users import UserWithToken
 from httpx import AsyncClient, Response
+
+from app.models.schemas.users import UserWithToken
 
 
 async def test_get(

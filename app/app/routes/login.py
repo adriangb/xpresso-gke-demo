@@ -1,9 +1,10 @@
+from argon2.exceptions import VerificationError
+from xpresso import FromJson, HTTPException, Path, status
+
 from app.db.repositories.users import UsersRepository
 from app.dependencies import PasswordHasher
 from app.models.schemas.users import UserInLogin, UserInResponse, UserWithToken
 from app.services.auth import AuthService
-from argon2.exceptions import VerificationError
-from xpresso import FromJson, HTTPException, Path, status
 
 
 async def login(

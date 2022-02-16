@@ -1,6 +1,7 @@
+from xpresso import HTTPException, status
+
 from app.models.schemas.auth import Unauthorized
 from app.models.schemas.jwt import Token
-from xpresso import HTTPException, status
 
 PREFIX = "Token "
 PREFIX_LENGTH = len(PREFIX)

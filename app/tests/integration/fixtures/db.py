@@ -4,6 +4,7 @@ from typing import AsyncGenerator
 
 import asyncpg  # type: ignore[import]
 import pytest
+
 from app.config import DatabaseConfig
 from app.db.migrations import run as migrations
 from app.main import app

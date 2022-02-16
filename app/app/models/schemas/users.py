@@ -1,7 +1,8 @@
 from typing import Optional
 
-from app.models.domain.users import User
 from pydantic import BaseModel, EmailStr, HttpUrl
+
+from app.models.domain.users import User
 
 
 class UserInLoginInfo(BaseModel):

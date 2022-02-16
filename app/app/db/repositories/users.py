@@ -3,6 +3,7 @@ from typing import Any, Mapping, Optional
 from uuid import UUID
 
 import asyncpg  # type: ignore[import]
+
 from app.db.connection import InjectDBConnectionPool
 from app.models.domain.users import User
 

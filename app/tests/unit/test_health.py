@@ -1,6 +1,7 @@
-from app.db.connection import ConnectionHealth
 from xpresso import App
 from xpresso.testclient import TestClient
+
+from app.db.connection import ConnectionHealth
 
 
 def test_health(test_app: App) -> None:

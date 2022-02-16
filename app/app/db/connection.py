@@ -2,8 +2,9 @@ from contextlib import asynccontextmanager
 from typing import Annotated, AsyncGenerator
 
 import asyncpg  # type: ignore[import]
-from app.config import DatabaseConfig
 from xpresso import Depends
+
+from app.config import DatabaseConfig
 
 
 @asynccontextmanager
