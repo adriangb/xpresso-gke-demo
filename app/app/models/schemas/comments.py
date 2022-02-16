@@ -1,16 +1,16 @@
 from typing import List
 
 from app.models.domain.comments import Comment
-from app.models.schemas.rwschema import RWSchema
+from pydantic import BaseModel
 
 
-class ListOfCommentsInResponse(RWSchema):
+class ListOfCommentsInResponse(BaseModel):
     comments: List[Comment]
 
 
-class CommentInResponse(RWSchema):
+class CommentInResponse(BaseModel):
     comment: Comment
 
 
-class CommentInCreate(RWSchema):
+class CommentInCreate(BaseModel):
     body: str

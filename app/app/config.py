@@ -7,6 +7,7 @@ class AppConfig(BaseSettings):
     app_port: int
     app_host: str
     log_level: Literal["DEBUG", "INFO"]
+    token_signing_secret_key: SecretStr
 
 
 class DatabaseConfig(BaseSettings):

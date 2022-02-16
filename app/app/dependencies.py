@@ -1,3 +1,8 @@
-from app.db import InjectDBConnection as InjectDBConnection  # noqa: F401
-from app.db import InjectDBConnectionPool as InjectDBConnectionPool  # noqa: F401
-from app.db import InjectDBHealth as InjectDBHealth  # noqa: F401
+from typing import Annotated
+
+import argon2
+from xpresso import Depends
+
+PasswordHasher = Annotated[
+    argon2.PasswordHasher, Depends(lambda: argon2.PasswordHasher(), scope="app")
+]

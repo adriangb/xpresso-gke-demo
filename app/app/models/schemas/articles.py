@@ -1,35 +1,34 @@
 from typing import List, Optional
 
 from app.models.domain.articles import Article
-from app.models.schemas.rwschema import RWSchema
 from pydantic import BaseModel, Field
 
 DEFAULT_ARTICLES_LIMIT = 20
 DEFAULT_ARTICLES_OFFSET = 0
 
 
-class ArticleForResponse(RWSchema, Article):
+class ArticleForResponse(Article):
     tags: List[str] = Field(..., alias="tagList")
 
 
-class ArticleInResponse(RWSchema):
+class ArticleInResponse(BaseModel):
     article: ArticleForResponse
 
 
-class ArticleInCreate(RWSchema):
+class ArticleInCreate(BaseModel):
     title: str
     description: str
     body: str
     tags: List[str] = Field([], alias="tagList")
 
 
-class ArticleInUpdate(RWSchema):
+class ArticleInUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     body: Optional[str] = None
 
 
-class ListOfArticlesInResponse(RWSchema):
+class ListOfArticlesInResponse(BaseModel):
     articles: List[ArticleForResponse]
     articles_count: int
 

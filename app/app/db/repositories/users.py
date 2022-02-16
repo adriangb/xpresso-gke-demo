@@ -39,6 +39,19 @@ LIMIT 1;
 """
 
 
+GET_USER_BY_ID = """\
+SELECT id,
+       username,
+       email,
+       hashed_password,
+       bio,
+       image,
+FROM users
+WHERE id = $1
+LIMIT 1;
+"""
+
+
 CREATE_USER = """\
 INSERT INTO users (username, email, hashed_password)
 VALUES ($1, $2, $3)
@@ -62,16 +75,24 @@ class UsersRepository:
 
     async def get_user_by_email(self, *, email: str) -> UserInDB | None:
         conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:
-            user_row: Record | None = await conn.fetchrow(GET_USER_BY_EMAIL, email)
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            user_row: Record | None = await conn.fetchrow(GET_USER_BY_EMAIL, email)  # type: ignore  # for Pylance
         if user_row:
             return UserInDB(**user_row)
         return None
 
     async def get_user_by_username(self, *, username: str) -> UserInDB | None:
         conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:
-            user_row: Record | None = await conn.fetchrow(GET_USER_BY_NAME, username)
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            user_row: Record | None = await conn.fetchrow(GET_USER_BY_NAME, username)  # type: ignore  # for Pylance
+        if user_row:
+            return UserInDB(**user_row)
+        return None
+
+    async def get_user_by_id(self, *, id: UUID) -> UserInDB | None:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            user_row: Record | None = await conn.fetchrow(GET_USER_BY_ID, id)  # type: ignore  # for Pylance
         if user_row:
             return UserInDB(**user_row)
         return None
@@ -84,32 +105,32 @@ class UsersRepository:
         hashed_password: str,
     ) -> None:
         conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:
-            await conn.execute(
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            await conn.execute(  # type: ignore  # for Pylance
                 CREATE_USER,
                 username,
                 email,
                 hashed_password,
             )
 
-    async def update_user(  # noqa: WPS211
+    async def update_user(
         self,
         *,
         user_id: UUID,  # from JWT
         username: Optional[str] = None,
         email: Optional[str] = None,
-        password: Optional[str] = None,
+        hashed_password: Optional[str] = None,
         bio: Optional[str] = None,
         image: Optional[str] = None,
-    ) -> UserInDB:
+    ) -> None:
         conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:
-            await conn.execute(
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            await conn.execute(  # type: ignore  # for Pylance
                 UPDATE_USER,
                 user_id,
                 username,
                 email,
-                password,
+                hashed_password,
                 bio,
                 image,
             )

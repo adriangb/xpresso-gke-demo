@@ -10,14 +10,15 @@ packages = [{ include = "app", from = "app" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-xpresso = "~0"
+xpresso = "~0"  # unpinned for now
 uvicorn = { extras = ["standard"], version = "~0.17" }
-asyncpg = "~0.25"
-python-json-logger = "~2"
-orjson = "~3"
+asyncpg = "^0.25.0"
+python-json-logger = "^2.0.2"
+orjson = "^3.6.7"
 argon2-cffi = "^21.3.0"
-itsdangerous = "^2.0.1"
 migri = {extras = ["postgresql"], version = "^0.6.3"}
+pydantic = {extras = ["email"], version = "^1.9.0"}
+PyJWT = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 requests = "~2"     # for TestClient
@@ -30,6 +31,8 @@ flake8 = "~4"
 mypy = ">=0.931"
 pytest-cov = "~3"
 coverage = {extras = ["toml"], version = "^~6"}
+httpx = "^0.22.0"
+asgi-lifespan = "^1.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

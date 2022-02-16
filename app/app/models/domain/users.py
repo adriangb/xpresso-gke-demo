@@ -1,7 +1,5 @@
-from typing import Annotated, Optional
-from uuid import UUID
+from typing import Optional
 
-from app.models.common import DateTimeModelMixin
 from pydantic import BaseModel
 
 

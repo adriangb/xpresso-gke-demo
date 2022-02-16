@@ -1,24 +1,19 @@
-from app.db import ConnectionHealth
+from app.db.connection import ConnectionHealth
 from pydantic import BaseModel
 from xpresso import Path
 
 
-class DBHealth(BaseModel):
+class DatabaseHealth(BaseModel):
     connected: bool
 
 
 class Health(BaseModel):
-    db: DBHealth
+    db: DatabaseHealth
 
 
 async def health(db_health: ConnectionHealth) -> Health:
     """Verify that the app is responding to requests and connected to the database"""
-    return Health(db=DBHealth(connected=await db_health.is_connected()))
+    return Health(db=DatabaseHealth(connected=await db_health.is_connected()))
 
 
-routes = [
-    Path(
-        "/health",
-        get=health,
-    )
-]
+health_pathitem = Path("/health", get=health)

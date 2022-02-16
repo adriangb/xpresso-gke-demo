@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from typing import Annotated, AsyncGenerator
 
 import asyncpg  # type: ignore[import]
@@ -5,6 +6,7 @@ from app.config import DatabaseConfig
 from xpresso import Depends
 
 
+@asynccontextmanager
 async def get_pool(config: DatabaseConfig) -> AsyncGenerator[asyncpg.Pool, None]:
     # password is optional:
     # - cloudsql proxy won't work with it
@@ -21,11 +23,17 @@ async def get_pool(config: DatabaseConfig) -> AsyncGenerator[asyncpg.Pool, None]
         yield pool
 
 
-InjectDBConnectionPool = Annotated[asyncpg.Pool, Depends(get_pool, scope="app")]
+def _missing_pool() -> None:
+    raise RuntimeError(
+        "The asyncpg connection pool should be bound at application startup"
+    )
+
+
+InjectDBConnectionPool = Annotated[asyncpg.Pool, Depends(_missing_pool)]
 
 
 async def get_connection(
-    pool: InjectDBConnectionPool,
+    pool: asyncpg.Pool,
 ) -> AsyncGenerator[asyncpg.Connection, None]:
     async with pool.acquire() as conn:  # type: ignore
         yield conn
@@ -35,17 +43,10 @@ InjectDBConnection = Annotated[asyncpg.Connection, Depends(get_connection)]
 
 
 class ConnectionHealth:
-    def __init__(self, pool: InjectDBConnectionPool) -> None:
+    def __init__(self, pool: asyncpg.Pool) -> None:
         self.pool = pool
 
     async def is_connected(self) -> bool:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore
             return await conn.fetchval("SELECT 1") == 1  # type: ignore
-
-
-def get_db_health(pool: InjectDBConnectionPool) -> ConnectionHealth:
-    return ConnectionHealth(pool)
-
-
-InjectDBHealth = Annotated[ConnectionHealth, Depends(get_db_health, scope="app")]

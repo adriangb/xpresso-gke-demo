@@ -1,3 +1,4 @@
+-- Create users table
 create table users(
   id uuid default gen_random_uuid() primary key,
   username text not null,
@@ -14,6 +15,7 @@ create table users(
 create index username_index on users using hash(username);
 create index email_index on users using hash(email);
 
+-- Create followers to following multi-link table
 create table followers_to_followings(
   follower_id uuid not null,
   foreign key (follower_id) references users on delete cascade,

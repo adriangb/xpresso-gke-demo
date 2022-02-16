@@ -5,8 +5,7 @@ from app.config import DatabaseConfig
 from migri import PostgreSQLConnection, apply_migrations  # type: ignore[import]
 
 
-async def main() -> None:
-    config = DatabaseConfig()  # type: ignore  # arguments come from env
+async def main(config: DatabaseConfig) -> None:
     if config.db_password:
         password = config.db_password.get_secret_value()
     else:
@@ -24,4 +23,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    config = DatabaseConfig()  # type: ignore  # arguments come from env
+    asyncio.run(main(config))

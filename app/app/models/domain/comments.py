@@ -1,8 +1,8 @@
-from app.models.common import DateTimeModelMixin, IDModelMixin
+from app.models.common import DateTimeModelMixin
 from app.models.domain.profiles import Profile
-from app.models.domain.rwmodel import RWModel
+from pydantic import BaseModel
 
 
-class Comment(IDModelMixin, DateTimeModelMixin, RWModel):
+class Comment(DateTimeModelMixin, BaseModel):
     body: str
     author: Profile

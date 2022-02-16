@@ -1,9 +1,9 @@
 from typing import Optional
 
-from app.models.domain.rwmodel import RWModel
+from pydantic import BaseModel
 
 
-class Profile(RWModel):
+class Profile(BaseModel):
     username: str
     bio: str = ""
     image: Optional[str] = None

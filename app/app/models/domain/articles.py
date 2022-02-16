@@ -1,11 +1,10 @@
 from typing import List
 
-from app.models.common import DateTimeModelMixin, IDModelMixin
+from app.models.common import DateTimeModelMixin
 from app.models.domain.profiles import Profile
-from app.models.domain.rwmodel import RWModel
 
 
-class Article(IDModelMixin, DateTimeModelMixin, RWModel):
+class Article(DateTimeModelMixin):
     slug: str
     title: str
     description: str
