@@ -21,7 +21,8 @@ create table followers_to_followings(
   foreign key (follower_id) references users on delete cascade,
   following_id uuid not null,
   foreign key (following_id) references users on delete cascade,
-  unique (follower_id, following_id)
+  unique (follower_id, following_id),
+  CONSTRAINT user_can_not_follow_themselves check (follower_id != following_id)
 );
 
 create index follower_id_index on followers_to_followings(follower_id);

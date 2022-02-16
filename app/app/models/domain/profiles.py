@@ -5,6 +5,6 @@ from pydantic import BaseModel
 
 class Profile(BaseModel):
     username: str
-    bio: str = ""
-    image: Optional[str] = None
-    following: bool = False
+    following: bool
+    bio: Optional[str]
+    image: Optional[str]

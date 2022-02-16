@@ -5,14 +5,18 @@ from uuid import UUID
 import asyncpg  # type: ignore[import]
 
 from app.db.connection import InjectDBConnectionPool
-from app.models.domain.users import User
 
 Record = Mapping[str, Any]
 
 
-class UserInDB(User):
+@dataclass(frozen=True, slots=True)
+class UserInDB:
     id: UUID
+    username: str
+    email: str
     hashed_password: str
+    bio: Optional[str] = None
+    image: Optional[str] = None
 
 
 GET_USER_BY_EMAIL = """\

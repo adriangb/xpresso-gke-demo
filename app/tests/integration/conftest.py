@@ -1,9 +1,10 @@
-from typing import Generator, NamedTuple
+from dataclasses import asdict, dataclass
+from typing import Generator
 
 import pytest
 from xpresso import App
 
-from app.db.repositories.users import UserInDB, UsersRepository
+from app.db.repositories.users import UsersRepository
 from app.main import app
 from app.services.auth import AuthService
 from tests.integration.fixtures.client import test_client
@@ -26,9 +27,8 @@ def anyio_backend() -> str:
     return "asyncio"
 
 
-class RegistedUserWithToken(NamedTuple):
-    user: UserInDB
-    password: str
+@dataclass
+class RegistedUserWithToken(RegisterdUser):
     token: str
 
 
@@ -38,9 +38,8 @@ def registered_users_with_tokens(
 ) -> list[RegistedUserWithToken]:
     return [
         RegistedUserWithToken(
-            user=u.user,
-            password=u.password,
-            token=auth_service.create_access_token(user_id=u.user.id),
+            **asdict(u),
+            token=auth_service.create_access_token(user_id=u.id),
         )
         for u in registered_users
     ]

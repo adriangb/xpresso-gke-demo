@@ -1,4 +1,5 @@
-from typing import NamedTuple
+from dataclasses import dataclass
+from uuid import UUID
 
 import asyncpg  # type: ignore[import]
 import pytest
@@ -13,8 +14,11 @@ async def users_repo(app_db_pool: asyncpg.Pool) -> users.UsersRepository:
     return users.UsersRepository(app_db_pool)
 
 
-class RegisterdUser(NamedTuple):
-    user: users.UserInDB
+@dataclass
+class RegisterdUser:
+    user: User
+    id: UUID
+    hashed_password: str
     password: str
 
 
@@ -43,6 +47,19 @@ async def registered_users(users_repo: users.UsersRepository) -> list[RegisterdU
         )
         db_user = await users_repo.get_user_by_email(email=u.email)
         assert db_user is not None
-        res.append(RegisterdUser(user=db_user, password=password))
+        user = User(
+            username=db_user.username,
+            email=db_user.email,
+            bio=db_user.bio,
+            image=db_user.image,
+        )
+        res.append(
+            RegisterdUser(
+                user=user,
+                password=password,
+                id=db_user.id,
+                hashed_password=db_user.hashed_password,
+            )
+        )
 
     return res
