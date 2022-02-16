@@ -9,22 +9,26 @@ class UserInLogin(BaseModel):
     password: str
 
 
-class _UserInCreate(BaseModel):
+class UserCreateInfo(BaseModel):
     username: str
     email: EmailStr
     password: str
 
 
 class UserInCreate(BaseModel):
-    user: _UserInCreate
+    user: UserCreateInfo
 
 
-class UserInUpdate(BaseModel):
+class UserUpdateInfo(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None
     bio: Optional[str] = None
     image: Optional[HttpUrl] = None
+
+
+class UserInUpdate(BaseModel):
+    user: UserUpdateInfo
 
 
 class UserWithToken(User):

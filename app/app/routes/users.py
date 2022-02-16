@@ -22,4 +22,4 @@ async def create_user(
     )
 
 
-users_path_item = Path("/users", post=create_user)
+path_item = Path("/users", post=create_user)

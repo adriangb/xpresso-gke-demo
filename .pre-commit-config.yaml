@@ -5,16 +5,13 @@ repos:
     hooks:
       - id: trailing-whitespace
         exclude: ^VERSION.txt$
-      - id: check-yaml
-      - id: pretty-format-json
-        args: ["--autofix"]
       - id: check-merge-conflict
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v2.5.1"
     hooks:
       - id: prettier
         name: Run prettier on infra source code
-        types_or: [ts]
+        types_or: [ts, json, yaml]
   - repo: local
     hooks:
       - id: lockfile

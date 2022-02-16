@@ -43,7 +43,7 @@ InjectDBConnection = Annotated[asyncpg.Connection, Depends(get_connection)]
 
 
 class ConnectionHealth:
-    def __init__(self, pool: asyncpg.Pool) -> None:
+    def __init__(self, pool: InjectDBConnectionPool) -> None:
         self.pool = pool
 
     async def is_connected(self) -> bool:

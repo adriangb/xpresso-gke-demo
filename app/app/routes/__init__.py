@@ -1,9 +1,10 @@
-from app.routes import health, users
+from app.routes import health, user, users
 from xpresso import Router
 from xpresso.routing.mount import Mount
 
 api_routes = [
-    users.users_path_item,
+    users.path_item,
+    user.path_item,
 ]
 
 api = Mount("/api", app=Router(routes=api_routes))

@@ -34,12 +34,13 @@ async def get_user(
 
 
 async def update_user(
-    user_info: FromJson[UserInUpdate],
+    user: FromJson[UserInUpdate],
     authorization: FromHeader[str],
     auth_service: AuthService,
     repo: UsersRepository,
     hasher: PasswordHasher,
 ) -> UserInResponse:
+    user_info = user.user
     token = extract_token_from_authroization_header(authorization)
     user_id = auth_service.verify_access_token_and_extract_user_id(token)
     # check that the user exists in the database
@@ -66,13 +67,13 @@ async def update_user(
     # build and return the user model
     return UserInResponse.construct(
         user=UserWithToken.construct(
-            username=maybe_user_in_db.username,
-            email=maybe_user_in_db.email,
-            bio=maybe_user_in_db.bio,
-            image=maybe_user_in_db.image,
+            username=user_info.username or maybe_user_in_db.username,
+            email=user_info.email or maybe_user_in_db.email,
+            bio=user_info.bio if user_info.bio is not None else maybe_user_in_db.bio,
+            image=maybe_user_in_db.image or maybe_user_in_db.image,
             token=token,
         )
     )
 
 
-user_path_item = Path("/users/user")
+path_item = Path("/user", get=get_user, put=update_user)
