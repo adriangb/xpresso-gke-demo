@@ -2,14 +2,19 @@ import random
 
 from httpx import AsyncClient, Response
 
+from app.db.repositories.followers import FollowersRepository
 from tests.integration.conftest import RegistedUserWithToken
 
 
-async def test_follow(
-    test_client: AsyncClient, registered_users_with_tokens: list[RegistedUserWithToken]
+async def test_get_profile_following(
+    test_client: AsyncClient,
+    registered_users_with_tokens: list[RegistedUserWithToken],
+    followers_repo: FollowersRepository,
 ) -> None:
     follower = random.choice(registered_users_with_tokens)
     following = next(u for u in registered_users_with_tokens if u is not follower)
+    await followers_repo.follow_user(following.user.username, follower.id)
+
     expected_response = {
         "profile": {
             "username": following.user.username,
@@ -18,20 +23,10 @@ async def test_follow(
             "following": True,
         }
     }
-    resp: Response = await test_client.post(
-        f"/api/profiles/{following.user.username}/follow",
+
+    resp: Response = await test_client.get(
+        f"/api/profiles/{following.user.username}",
         headers={"Authorization": f"Token {follower.token}"},
     )
     assert resp.status_code == 200, resp.content
     assert resp.json() == expected_response
-
-
-async def test_user_to_follow_does_not_exist(
-    test_client: AsyncClient, registered_users_with_tokens: list[RegistedUserWithToken]
-) -> None:
-    follower = random.choice(registered_users_with_tokens)
-    resp: Response = await test_client.post(
-        "/api/profiles/does-not-exist/follow",
-        headers={"Authorization": f"Token {follower.token}"},
-    )
-    assert resp.status_code == 404, resp.content

@@ -1,4 +1,4 @@
-from xpresso import FromHeader, FromJson, HTTPException, Path, status
+from xpresso import FromHeader, FromJson, HTTPException, status
 
 from app.db.repositories.users import UsersRepository
 from app.dependencies import PasswordHasher
@@ -8,7 +8,7 @@ from app.routes.utils import extract_token_from_authroization_header
 from app.services.auth import AuthService
 
 
-async def get_user(
+async def get_user_endpoint(
     authorization: FromHeader[str],
     auth_service: AuthService,
     repo: UsersRepository,
@@ -34,7 +34,7 @@ async def get_user(
     )
 
 
-async def update_user(
+async def update_user_endpoint(
     user: FromJson[UserInUpdate],
     authorization: FromHeader[str],
     auth_service: AuthService,
@@ -75,6 +75,3 @@ async def update_user(
             token=token,
         )
     )
-
-
-path_item = Path("/user", get=get_user, put=update_user)

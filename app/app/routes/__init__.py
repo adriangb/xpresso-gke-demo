@@ -1,18 +1,18 @@
-from xpresso import Router
+from xpresso import Path, Router
 from xpresso.routing.mount import Mount
 
-from app.routes import follow, health, login, user, users
+from app.routes import follow, health, login, profile, user, users
 
 api_routes = [
-    users.path_item,
-    user.path_item,
-    login.path_item,
-    follow.path_item,
+    Path("/users", post=users.create_user_endpoint),
+    Path("/user", get=user.get_user_endpoint, put=user.update_user_endpoint),
+    Path("/users/login", post=login.login_endpoint),
+    Path("/profiles/{username}/follow", post=follow.follow_user_endpoint),
+    Path("/profiles/{username}/unfollow", post=follow.unfollow_user_endpoint),
+    Path("/profiles/{username}", get=profile.get_profile_endpoint),
 ]
 
-api = Mount("/api", app=Router(routes=api_routes))
-
 routes = [
-    health.path_item,
-    api,
+    Path("/health", get=health.health_endpoint),
+    Mount("/api", app=Router(routes=api_routes)),
 ]

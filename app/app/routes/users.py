@@ -1,4 +1,4 @@
-from xpresso import FromJson, Path
+from xpresso import FromJson
 
 from app.db.repositories.users import UsersRepository
 from app.dependencies import PasswordHasher
@@ -6,7 +6,7 @@ from app.models.domain.users import User
 from app.models.schemas.users import UserInCreate, UserInResponse
 
 
-async def create_user(
+async def create_user_endpoint(
     user: FromJson[UserInCreate], repo: UsersRepository, hasher: PasswordHasher
 ) -> UserInResponse:
     # register the user in the db
@@ -21,6 +21,3 @@ async def create_user(
             username=user.user.username, email=user.user.email, bio=None, image=None
         )
     )
-
-
-path_item = Path("/users", post=create_user)

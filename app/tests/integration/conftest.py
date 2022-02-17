@@ -9,7 +9,12 @@ from app.main import app
 from app.services.auth import AuthService
 from tests.integration.fixtures.client import test_client
 from tests.integration.fixtures.db import admin_db_connection, app_db_pool
-from tests.integration.fixtures.repo import RegisterdUser, registered_users, users_repo
+from tests.integration.fixtures.repos import (
+    RegisterdUser,
+    followers_repo,
+    registered_users,
+    users_repo,
+)
 from tests.integration.fixtures.services import auth_service
 
 __all__ = (
@@ -19,6 +24,7 @@ __all__ = (
     "registered_users",
     "users_repo",
     "auth_service",
+    "followers_repo",
 )
 
 

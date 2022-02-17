@@ -1,5 +1,5 @@
 from argon2.exceptions import VerificationError
-from xpresso import FromJson, HTTPException, Path, status
+from xpresso import FromJson, HTTPException, status
 
 from app.db.repositories.users import UsersRepository
 from app.dependencies import PasswordHasher
@@ -7,7 +7,7 @@ from app.models.schemas.users import UserInLogin, UserInResponse, UserWithToken
 from app.services.auth import AuthService
 
 
-async def login(
+async def login_endpoint(
     user: FromJson[UserInLogin],
     auth_service: AuthService,
     repo: UsersRepository,
@@ -47,6 +47,3 @@ async def login(
             token=token,
         )
     )
-
-
-path_item = Path("/users/login", post=login)

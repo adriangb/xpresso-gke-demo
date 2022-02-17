@@ -4,7 +4,7 @@ from uuid import UUID
 import asyncpg  # type: ignore[import]
 import pytest
 
-from app.db.repositories import users
+from app.db.repositories import followers, users
 from app.models.domain.users import User
 from tests.hasher import password_hasher
 
@@ -63,3 +63,8 @@ async def registered_users(users_repo: users.UsersRepository) -> list[RegisterdU
         )
 
     return res
+
+
+@pytest.fixture
+async def followers_repo(app_db_pool: asyncpg.Pool) -> followers.FollowersRepository:
+    return followers.FollowersRepository(app_db_pool)
