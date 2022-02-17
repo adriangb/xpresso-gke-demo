@@ -1,8 +1,7 @@
 from xpresso import FromHeader, FromPath, HTTPException, status
 
-from app.db.repositories.followers import FolloweeDoesNotExist, FollowersRepository
-from app.models.domain.profiles import Profile
-from app.models.schemas.profiles import ProfileInResponse
+from app.db.repositories.profiles import FolloweeDoesNotExist, ProfilesRepository
+from app.models.schemas.profiles import Profile, ProfileInResponse
 from app.routes.utils import extract_token_from_authroization_header
 from app.services.auth import AuthService
 
@@ -11,7 +10,7 @@ async def follow_user_endpoint(
     username: FromPath[str],
     authorization: FromHeader[str],
     auth_service: AuthService,
-    repo: FollowersRepository,
+    repo: ProfilesRepository,
 ) -> ProfileInResponse:
     token = extract_token_from_authroization_header(authorization)
     user_id = auth_service.verify_access_token_and_extract_user_id(token)
@@ -40,7 +39,7 @@ async def unfollow_user_endpoint(
     username: FromPath[str],
     authorization: FromHeader[str],
     auth_service: AuthService,
-    repo: FollowersRepository,
+    repo: ProfilesRepository,
 ) -> ProfileInResponse:
     token = extract_token_from_authroization_header(authorization)
     user_id = auth_service.verify_access_token_and_extract_user_id(token)

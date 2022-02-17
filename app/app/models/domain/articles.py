@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from app.models.common import DateTimeModelMixin
@@ -13,3 +14,5 @@ class Article(DateTimeModelMixin):
     author: Profile
     favorited: bool
     favorites_count: int
+    created_at: datetime
+    updated_at: datetime

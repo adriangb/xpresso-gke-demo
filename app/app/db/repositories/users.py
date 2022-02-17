@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 from uuid import UUID
 
 import asyncpg  # type: ignore[import]
@@ -15,8 +15,8 @@ class UserInDB:
     username: str
     email: str
     hashed_password: str
-    bio: Optional[str] = None
-    image: Optional[str] = None
+    bio: str | None = None
+    image: str | None = None
 
 
 GET_USER_BY_EMAIL = """\
@@ -122,11 +122,11 @@ class UsersRepository:
         self,
         *,
         user_id: UUID,  # from JWT
-        username: Optional[str] = None,
-        email: Optional[str] = None,
-        hashed_password: Optional[str] = None,
-        bio: Optional[str] = None,
-        image: Optional[str] = None,
+        username: str | None = None,
+        email: str | None = None,
+        hashed_password: str | None = None,
+        bio: str | None = None,
+        image: str | None = None,
     ) -> None:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance

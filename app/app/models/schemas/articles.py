@@ -1,42 +1,65 @@
-from typing import List, Optional
+from datetime import datetime
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from app.models.domain.articles import Article
+from app.models.schemas.configs import ModelInRequestConfig, ModelInResponseConfig
+from app.models.schemas.profiles import Profile
 
 DEFAULT_ARTICLES_LIMIT = 20
 DEFAULT_ARTICLES_OFFSET = 0
 
 
-class ArticleForResponse(Article):
-    tags: List[str] = Field(..., alias="tagList")
-
-
-class ArticleInResponse(BaseModel):
-    article: ArticleForResponse
-
-
-class ArticleInCreate(BaseModel):
+class Article(BaseModel):
+    slug: str
     title: str
     description: str
     body: str
-    tags: List[str] = Field([], alias="tagList")
+    tags: Annotated[list[str], Field(alias="tagList")]
+    author: Profile
+    favorited: bool
+    favorites_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    Config = ModelInResponseConfig
+
+
+class ArticleInResponse(BaseModel):
+    article: Article
+
+
+class ArticleForCreate(BaseModel):
+    title: str
+    description: str
+    body: str
+    tags: list[str] | None = Field(alias="tagList")
+
+    Config = ModelInRequestConfig
+
+
+class ArticleInCreate(BaseModel):
+    article: ArticleForCreate
 
 
 class ArticleInUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    body: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
+    body: str | None = None
+
+    Config = ModelInRequestConfig
 
 
 class ListOfArticlesInResponse(BaseModel):
-    articles: List[ArticleForResponse]
+    articles: list[Article]
     articles_count: int
+
+    Config = ModelInResponseConfig
 
 
 class ArticlesFilters(BaseModel):
-    tag: Optional[str] = None
-    author: Optional[str] = None
-    favorited: Optional[str] = None
-    limit: int = Field(DEFAULT_ARTICLES_LIMIT, ge=1)
-    offset: int = Field(DEFAULT_ARTICLES_OFFSET, ge=0)
+    tag: str | None = None
+    author: str | None = None
+    favorited: str | None = None
+    limit: Annotated[int, Field(ge=1)] = DEFAULT_ARTICLES_LIMIT
+    offset: Annotated[int, Field(ge=0)] = DEFAULT_ARTICLES_OFFSET

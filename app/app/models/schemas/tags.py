@@ -1,7 +1,9 @@
-from typing import List
-
 from pydantic import BaseModel
+
+from app.models.schemas.configs import ModelInResponseConfig
 
 
 class TagsInList(BaseModel):
-    tags: List[str]
+    tags: list[str]
+
+    Config = ModelInResponseConfig

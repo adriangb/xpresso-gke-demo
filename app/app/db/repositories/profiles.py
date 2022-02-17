@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 from uuid import UUID
 
 import asyncpg  # type: ignore[import]
@@ -62,8 +62,8 @@ SELECT username, bio, image, follows FROM followed_profile CROSS JOIN follows;
 @dataclass(frozen=True, slots=True)
 class Profile:
     username: str
-    image: Optional[str]
-    bio: Optional[str]
+    image: str | None
+    bio: str | None
     follows: bool
 
 
@@ -72,7 +72,7 @@ class FolloweeDoesNotExist(Exception):
 
 
 @dataclass(frozen=True, slots=True, eq=False)
-class FollowersRepository:
+class ProfilesRepository:
     pool: InjectDBConnectionPool
 
     async def follow_user(
@@ -100,7 +100,7 @@ class FollowersRepository:
             return Profile(**unfollowed_profile, follows=False)
 
     async def get_profile(
-        self, username_of_target_profile: str, id_of_current_user: Optional[UUID]
+        self, username_of_target_profile: str, id_of_current_user: UUID | None
     ) -> Profile:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
