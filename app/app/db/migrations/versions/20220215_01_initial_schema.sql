@@ -81,6 +81,20 @@ create table articles_to_tags(
 create index articles_index on articles_to_tags(article_id);
 create index tags_index on articles_to_tags using hash(tag_name);
 
+-- Create a trigger to insert a tag into the tags table if it doesn't exist
+
+CREATE FUNCTION record_new_tag() RETURNS TRIGGER AS $$
+	BEGIN
+		INSERT INTO tags (tag_name) VALUES (NEW.tag_name)
+		ON CONFLICT DO NOTHING;
+    RETURN NEW;
+	END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER record_new_tag
+    BEFORE INSERT ON articles_to_tags
+    FOR EACH ROW EXECUTE FUNCTION record_new_tag();
+
 -- Create triggers to clean up tags that have no articles
 -- Whenver the on delete cascade deletes a row from articles_to_tags
 -- we check if any of the delted tags are no longer in the articles_to_tags
@@ -89,10 +103,9 @@ create index tags_index on articles_to_tags using hash(tag_name);
 CREATE FUNCTION delete_dangling_tags() RETURNS TRIGGER AS $$
 	BEGIN
 		DELETE FROM tags
-		WHERE (
-		  tags.tag_name in (SELECT tag_name from old_table)
-		  and
-		  old_table.tag_name not in (SELECT tag_name from articles_to_tags)
+		WHERE tags.tag_name in (
+			SELECT old_table.tag_name from old_table
+			LEFT OUTER JOIN articles_to_tags ON (old_table.tag_name = articles_to_tags.tag_name)
 		);
 		RETURN null;
 	END;

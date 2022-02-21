@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import List
 
-from app.models.common import DateTimeModelMixin
+from pydantic import BaseModel
+
 from app.models.domain.profiles import Profile
 
 
-class Article(DateTimeModelMixin):
+class Article(BaseModel):
     slug: str
     title: str
     description: str

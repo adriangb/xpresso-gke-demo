@@ -1,9 +1,12 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
-from app.models.common import DateTimeModelMixin
 from app.models.domain.profiles import Profile
 
 
-class Comment(DateTimeModelMixin, BaseModel):
+class Comment(BaseModel):
     body: str
     author: Profile
+    created_at: datetime
+    updated_at: datetime

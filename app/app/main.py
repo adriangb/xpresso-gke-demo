@@ -25,10 +25,12 @@ async def main() -> None:
     app.dependency_overrides[AuthService] = lambda: auth_service
     # set up JSON logging
     log_config = get_json_logconfig(app_config.log_level)
-    # run migrations
-    await migrations.main(db_config)
     # get a database pool for the lifetime of the app
     async with get_pool(db_config) as pool:
+        # run migrations
+        conn: asyncpg.Connection
+        async with pool.acquire() as conn:
+            await migrations.run(conn)
         # bind that pool to the DI container
         app.dependency_overrides[asyncpg.Pool] = lambda: pool
         # start the server

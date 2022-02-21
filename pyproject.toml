@@ -9,14 +9,14 @@ license = "MIT"
 packages = [{ include = "app", from = "app" }]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.11"
 xpresso = "~0"  # unpinned for now
 uvicorn = { extras = ["standard"], version = "~0.17" }
 asyncpg = "^0.25.0"
 python-json-logger = "^2.0.2"
 orjson = "^3.6.7"
 argon2-cffi = "^21.3.0"
-migri = {extras = ["postgresql"], version = "^0.6.3"}
+migri = {extras = ["postgresql"], version = "^0.7.0"}
 pydantic = {extras = ["email"], version = "^1.9.0"}
 PyJWT = "^2.3.0"
 
