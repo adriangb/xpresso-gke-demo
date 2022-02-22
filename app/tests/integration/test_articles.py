@@ -43,10 +43,7 @@ def article_validation_model(author: RegistedUserWithToken) -> Type[BaseModel]:
         favoritesCount: Literal[0]
         author: ResponseProfileValidator
 
-    class ReponseValidator(BaseModel):
-        article: ResponseArticleValidator
-
-    return ReponseValidator
+    return ResponseArticleValidator
 
 
 async def test_publish_article(
@@ -69,7 +66,7 @@ async def test_publish_article(
         json=payload,
     )
     assert resp.status_code == 201, resp.content
-    article_validation_model.validate(resp.json())
+    article_validation_model.validate(resp.json()["article"])
 
 
 async def test_list_articles(
@@ -91,7 +88,7 @@ async def test_list_articles(
         headers={"Authorization": f"Token {author.token}"},
     )
     assert resp.status_code == 200, resp.content
-    for article in resp.json():
+    for article in resp.json()["articles"]:
         article_validation_model.validate(article)
 
 
@@ -165,7 +162,7 @@ async def test_list_articles_filter(
         params=params,
     )
     assert resp.status_code == 200, resp.content
-    assert [res["article"]["title"] for res in resp.json()] == expected_titles
+    assert [art["title"] for art in resp.json()["articles"]] == expected_titles
 
 
 @pytest.mark.parametrize(
@@ -227,7 +224,7 @@ async def test_articles_feed(
         },
     )
     assert resp.status_code == 200, resp.content
-    assert [res["article"]["title"] for res in resp.json()] == expected_titles
+    assert [art["title"] for art in resp.json()["articles"]] == expected_titles
 
 
 async def test_delete_article(
@@ -251,7 +248,7 @@ async def test_delete_article(
 
     resp = await test_client.get("/api/articles")
     assert resp.status_code == 200, resp.content
-    assert resp.json() == []
+    assert resp.json() == {"articles": []}
 
 
 async def test_update_article(
@@ -287,3 +284,54 @@ async def test_update_article(
     assert received_article["title"] == "New Title"
     assert received_article["description"] == "New description"
     assert received_article["body"] == "New body!"
+
+
+async def test_favorite_article(
+    test_client: AsyncClient,
+    registered_users_with_tokens: list[RegistedUserWithToken],
+    articles_repo: ArticlesRepository,
+) -> None:
+    # create an article
+    article = await articles_repo.create_article(
+        author_id=registered_users_with_tokens[0].id,
+        title="1",
+        description="",
+        body="",
+        tags=["tag1", "tag2"],
+    )
+
+    resp: Response
+    resp = await test_client.post(
+        f"/api/articles/{article.id}/favorite",
+        headers={"Authorization": f"Token {registered_users_with_tokens[1].token}"},
+    )
+    assert resp.status_code == 200, resp.content
+    assert resp.json()["article"]["favorited"] is True
+
+
+async def test_unfavorite_article(
+    test_client: AsyncClient,
+    registered_users_with_tokens: list[RegistedUserWithToken],
+    articles_repo: ArticlesRepository,
+) -> None:
+    current_user = registered_users_with_tokens[1]
+    # create an article
+    article = await articles_repo.create_article(
+        author_id=registered_users_with_tokens[0].id,
+        title="1",
+        description="",
+        body="",
+        tags=["tag1", "tag2"],
+    )
+    await articles_repo.favorite_article(
+        current_user_id=current_user.id,
+        article_id=article.id,
+    )
+
+    resp: Response
+    resp = await test_client.delete(
+        f"/api/articles/{article.id}/favorite",
+        headers={"Authorization": f"Token {current_user.token}"},
+    )
+    assert resp.status_code == 200, resp.content
+    assert resp.json()["article"]["favorited"] is False

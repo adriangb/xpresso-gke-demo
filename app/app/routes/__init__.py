@@ -2,7 +2,17 @@ from xpresso import Operation, Path, Router, status
 from xpresso.routing.mount import Mount
 
 from app.responses import empty_response, orjson_response
-from app.routes import articles, feed, follow, health, login, profile, user, users
+from app.routes import (
+    article,
+    articles,
+    follow,
+    health,
+    login,
+    profile,
+    tags,
+    user,
+    users,
+)
 
 api_routes = [
     Path(
@@ -32,20 +42,29 @@ api_routes = [
     Path(
         "/articles",
         post=Operation(
-            articles.create_article,
+            article.create_article,
             **orjson_response(status_code=status.HTTP_201_CREATED)
         ),
         get=Operation(articles.list_articles, **orjson_response()),
     ),
     Path(
         "/articles/feed",
-        get=Operation(feed.get_user_feed, **orjson_response()),
+        get=Operation(articles.get_user_feed, **orjson_response()),
     ),
     Path(
         "/articles/{slug}",
-        delete=Operation(articles.delete_article, **empty_response()),
-        put=Operation(articles.update_article, **orjson_response()),
-        get=Operation(articles.get_article, **orjson_response()),
+        delete=Operation(article.delete_article, **empty_response()),
+        put=Operation(article.update_article, **orjson_response()),
+        get=Operation(article.get_article, **orjson_response()),
+    ),
+    Path(
+        "/articles/{slug}/favorite",
+        post=Operation(article.favorite_article, **orjson_response()),
+        delete=Operation(article.unfavorite_article, **orjson_response()),
+    ),
+    Path(
+        "/tags",
+        get=Operation(tags.list_tags, **orjson_response()),
     ),
 ]
 

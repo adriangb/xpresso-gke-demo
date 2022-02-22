@@ -61,6 +61,7 @@ LIMIT 1;
 CREATE_USER = """\
 INSERT INTO users (username, email, hashed_password)
 VALUES ($1, $2, $3)
+RETURNING id
 """
 
 UPDATE_USER = """\
@@ -168,15 +169,16 @@ class UsersRepository:
         username: str,
         email: str,
         hashed_password: str,
-    ) -> None:
+    ) -> UUID:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            await conn.execute(  # type: ignore  # for Pylance
+            user_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
                 CREATE_USER,
                 username,
                 email,
                 hashed_password,
             )
+            return user_record["id"]  # type: ignore[no-any-return]
 
     async def update_user(
         self,

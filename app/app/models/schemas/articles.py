@@ -29,6 +29,10 @@ class ArticleInResponse(BaseModel):
     article: Article
 
 
+class ArticlesInResponse(BaseModel):
+    articles: list[Article]
+
+
 class ArticleForCreate(BaseModel):
     title: str
     description: str

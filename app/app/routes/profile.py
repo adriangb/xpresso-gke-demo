@@ -20,8 +20,8 @@ async def get_profile(
             detail={"reason": f"No user found with username {username}"},
         ) from exc
     # build and return the profile
-    return ProfileInResponse(
-        profile=Profile(
+    return ProfileInResponse.construct(
+        profile=Profile.construct(
             username=profile.username,
             bio=profile.bio,
             image=profile.image,

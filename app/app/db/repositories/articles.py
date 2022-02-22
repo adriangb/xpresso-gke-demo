@@ -159,6 +159,14 @@ OFFSET $3
 FAVORITE_ARTICLE = """\
 INSERT INTO favorites (user_id, article_id) VALUES ($1, $2)
 ON CONFLICT DO NOTHING
+RETURNING 1
+"""
+
+# $1 = current user's ID
+UNFAVORITE_ARTICLE = """\
+DELETE FROM favorites
+WHERE user_id = $1 and article_id = $2
+RETURNING 1
 """
 
 # $1 = current user's ID, maybe null
@@ -271,7 +279,9 @@ class ArticlesRepository:
 
     async def favorite_article(
         self, *, current_user_id: UUID, article_id: UUID
-    ) -> None:
+    ) -> ArticleInDB:
+        # to avoid concurrency issues when favoriting and counting favorites
+        # in the same query, do this in 2 queries
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             await conn.execute(  # type: ignore  # for Pylance
@@ -279,6 +289,33 @@ class ArticlesRepository:
                 current_user_id,
                 article_id,
             )
+            article_record: Record | None = await conn.fetchrow(  # type: ignore  # for Pylance
+                GET_ARTICLE_BY_ID,
+                current_user_id,
+                article_id,
+            )
+            if article_record:
+                return ArticleInDB.from_record(article_record)
+            raise ArticleNotFound
+
+    async def unfavorite_article(
+        self, *, current_user_id: UUID, article_id: UUID
+    ) -> ArticleInDB:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            await conn.execute(  # type: ignore  # for Pylance
+                UNFAVORITE_ARTICLE,
+                current_user_id,
+                article_id,
+            )
+            article_record: Record | None = await conn.fetchrow(  # type: ignore  # for Pylance
+                GET_ARTICLE_BY_ID,
+                current_user_id,
+                article_id,
+            )
+            if article_record:
+                return ArticleInDB.from_record(article_record)
+            raise ArticleNotFound
 
     async def delete_article(self, *, current_user_id: UUID, article_id: UUID) -> None:
         conn: asyncpg.Connection

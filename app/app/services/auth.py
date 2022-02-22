@@ -32,7 +32,7 @@ class AuthService:
 
     def create_access_token(self, user_id: UUID) -> Token:
         jwt_user = JWTUser.construct(
-            exp=self.now() + self.expiration_timedelta, user_id=user_id
+            exp=self.now() + self.expiration_timedelta, sub=user_id
         )
         jwt_payload = self.encoder(jwt_user.dict(by_alias=True))
         return jwt.encode(jwt_payload, self.secret_key, algorithm=ALGORITHM)  # type: ignore[misc,return-value]

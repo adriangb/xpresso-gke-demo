@@ -21,8 +21,8 @@ async def follow_user(
             detail={"reason": f"No user found with username {username}"},
         )
     # build and return the profile
-    return ProfileInResponse(
-        profile=Profile(
+    return ProfileInResponse.construct(
+        profile=Profile.construct(
             username=followed_profile.username,
             bio=followed_profile.bio,
             image=followed_profile.image,
@@ -48,8 +48,8 @@ async def unfollow_user(
             detail={"reason": f"No user found with username {username}"},
         )
     # build and return the profile
-    return ProfileInResponse(
-        profile=Profile(
+    return ProfileInResponse.construct(
+        profile=Profile.construct(
             username=followed_profile.username,
             bio=followed_profile.bio,
             image=followed_profile.image,
