@@ -1,24 +1,11 @@
-from xpresso import Operation, Path, Router
-from xpresso.responses import Response
+from xpresso import Path, Router
 from xpresso.routing.mount import Mount
-from xpresso.routing.operation import Endpoint
 
-from app.encoder import OrjsonPydanticOutEncoder
+from app.responses import create_json_operation
 from app.routes import articles, follow, health, login, profile, user, users
 
-encoder = OrjsonPydanticOutEncoder()
-
-
-def _json_operation_factory(endpoint: Endpoint, status_code: int = 200) -> Operation:
-    return Operation(
-        endpoint,
-        response_encoder=encoder,
-        response_factory=lambda content: Response(content, status_code=status_code),
-    )
-
-
 api_routes = [
-    Path("/users", post=_json_operation_factory(users.create_user)),
+    Path("/users", post=create_json_operation(users.create_user)),
     Path("/user", get=user.get_user, put=user.update_user),
     Path("/users/login", post=login.login),
     Path("/profiles/{username}/follow", post=follow.follow_user),
