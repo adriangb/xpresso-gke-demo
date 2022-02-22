@@ -14,7 +14,7 @@ class FixedPostgreSQLConnection(PostgreSQLConnection):  # type: ignore[misc]
 
 
 async def run(asyncpg_connection: asyncpg.Connection) -> None:
-    conn = PostgreSQLConnection(connection=asyncpg_connection)
+    conn = FixedPostgreSQLConnection(connection=asyncpg_connection)
     dir = (pathlib.Path(__file__).parent / "versions").absolute()
     async with conn:
         await apply_migrations(str(dir), conn)

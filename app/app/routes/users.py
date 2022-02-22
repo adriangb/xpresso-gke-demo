@@ -6,7 +6,7 @@ from app.models.domain.users import User
 from app.models.schemas.users import UserInCreate, UserInResponse
 
 
-async def create_user_endpoint(
+async def create_user(
     user: FromJson[UserInCreate], repo: UsersRepository, hasher: PasswordHasher
 ) -> UserInResponse:
     # register the user in the db

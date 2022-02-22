@@ -71,7 +71,7 @@ class FolloweeDoesNotExist(Exception):
     pass
 
 
-@dataclass(frozen=True, slots=True, eq=False)
+@dataclass(frozen=True, slots=True)
 class ProfilesRepository:
     pool: InjectDBConnectionPool
 

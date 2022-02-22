@@ -6,7 +6,7 @@ from app.routes.utils import extract_token_from_authroization_header
 from app.services.auth import AuthService
 
 
-async def follow_user_endpoint(
+async def follow_user(
     username: FromPath[str],
     authorization: FromHeader[str],
     auth_service: AuthService,
@@ -35,7 +35,7 @@ async def follow_user_endpoint(
     )
 
 
-async def unfollow_user_endpoint(
+async def unfollow_user(
     username: FromPath[str],
     authorization: FromHeader[str],
     auth_service: AuthService,

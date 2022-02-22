@@ -7,7 +7,7 @@ from app.models.schemas.users import UserInLogin, UserInResponse, UserWithToken
 from app.services.auth import AuthService
 
 
-async def login_endpoint(
+async def login(
     user: FromJson[UserInLogin],
     auth_service: AuthService,
     repo: UsersRepository,

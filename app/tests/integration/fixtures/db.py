@@ -36,7 +36,7 @@ async def admin_db_connection(
     db_connection_pool: asyncpg.Pool,
 ) -> AsyncGenerator[asyncpg.Connection, None]:
     conn: asyncpg.Connection
-    async with db_connection_pool.acquire() as conn:
+    async with db_connection_pool.acquire() as conn:  # type: ignore
         yield conn
 
 
@@ -45,7 +45,7 @@ async def app_db_pool(
     db_connection_pool: asyncpg.Pool,
     admin_db_connection: asyncpg.Connection,
 ) -> AsyncGenerator[asyncpg.Pool, None]:
-    await admin_db_connection.execute(
+    await admin_db_connection.execute(  # type: ignore
         "DROP SCHEMA public CASCADE;CREATE SCHEMA public;"
     )
     await migrations.run(admin_db_connection)

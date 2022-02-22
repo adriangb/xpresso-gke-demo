@@ -8,7 +8,7 @@ from app.routes.utils import extract_token_from_authroization_header
 from app.services.auth import AuthService
 
 
-async def get_user_endpoint(
+async def get_user(
     authorization: FromHeader[str],
     auth_service: AuthService,
     repo: UsersRepository,
@@ -34,7 +34,7 @@ async def get_user_endpoint(
     )
 
 
-async def update_user_endpoint(
+async def update_user(
     user: FromJson[UserInUpdate],
     authorization: FromHeader[str],
     auth_service: AuthService,

@@ -11,7 +11,7 @@ DELETE FROM commnets WHERE id = $1;
 """
 
 
-@dataclass(frozen=True, slots=True, eq=False)
+@dataclass(frozen=True, slots=True)
 class CommentsRepository:
     pool: InjectDBConnectionPool
 

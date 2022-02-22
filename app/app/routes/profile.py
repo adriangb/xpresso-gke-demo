@@ -6,7 +6,7 @@ from app.routes.utils import extract_token_from_authroization_header
 from app.services.auth import AuthService
 
 
-async def get_profile_endpoint(
+async def get_profile(
     username: FromPath[str],
     authorization: FromHeader[str],
     auth_service: AuthService,

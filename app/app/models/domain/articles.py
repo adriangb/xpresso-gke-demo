@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from pydantic import BaseModel
 
@@ -11,7 +10,7 @@ class Article(BaseModel):
     title: str
     description: str
     body: str
-    tags: List[str]
+    tags: list[str]
     author: Profile
     favorited: bool
     favorites_count: int
