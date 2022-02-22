@@ -14,5 +14,5 @@ async def test_registration(test_client: AsyncClient) -> None:
         }
     }
     resp: Response = await test_client.post("/api/users", json=payload)
-    assert resp.status_code == 200, resp.content
+    assert resp.status_code == 201, resp.content
     assert resp.json() == expected_response

@@ -37,24 +37,35 @@ class ArticleCreatedInDB:
     updated_at: datetime
 
 
-GET_ARTICLE_BY_ID = """\
-WITH users_that_favorited AS (
-    SELECT user_id FROM favorites
-    WHERE article_id = $1
-)
-SELECT (
-    id,
-    title,
-    description,
-    body,
-    author_id,
-    created_at,
-    updated_at,
-    EXISTS(SELECT 1 FROM users_that_favorited WHERE user_id = $2) AS favorited,
-    COUNT(SELECT user_id FROM users_that_favorited) AS favorites_count
-)
+# $1: current user's ID
+_ARTICLE_FIELDS = """\
+    articles.id,
+    articles.title,
+    articles.description,
+    articles.body,
+    articles.created_at,
+    articles.updated_at,
+    EXISTS(SELECT 1 FROM favorites WHERE $1::uuid IS NOT NULL AND user_id = $1::uuid AND article_id = id) AS favorited,
+    (SELECT COUNT(*) FROM favorites WHERE article_id = id) AS favorites_count,
+    (
+        SELECT json_build_object(
+            'username', username,
+            'bio', bio,
+            'image', image,
+            'following', EXISTS(SELECT 1 FROM followers_to_followings WHERE $1::uuid IS NOT NULL AND follower_id = $1::uuid AND following_id = author_id)
+        )
+        FROM users
+        WHERE id = author_id
+    ) AS author,
+    (SELECT array_agg(tag_name) FROM articles_to_tags WHERE article_id = id) AS tags
+"""
+
+
+GET_ARTICLE_BY_ID = f"""\
+SELECT
+{_ARTICLE_FIELDS}
 FROM articles
-WHERE id = $1
+WHERE id = $2
 """
 
 
@@ -79,29 +90,20 @@ class ArticleInDB:
     favorited: bool
     favorites_count: int
 
-
-_SELECT_ARTICLES = """\
-SELECT
-    articles.id,
-    articles.title,
-    articles.description,
-    articles.body,
-    articles.created_at,
-    articles.updated_at,
-    EXISTS(SELECT 1 FROM favorites WHERE $1::uuid IS NOT NULL AND user_id = $1::uuid AND article_id = id) AS favorited,
-    (SELECT COUNT(*) FROM favorites WHERE article_id = id) AS favorites_count,
-    (
-        SELECT json_build_object(
-            'username', username,
-            'bio', bio,
-            'image', image,
-            'following', EXISTS(SELECT 1 FROM followers_to_followings WHERE $1::uuid IS NOT NULL AND follower_id = $1::uuid AND following_id = author_id)
+    @classmethod
+    def from_record(cls, record: Record) -> "ArticleInDB":
+        return ArticleInDB(
+            id=record["id"],
+            title=record["title"],
+            description=record["description"],
+            body=record["body"],
+            author=ProfileInDB(**orjson.loads(record["author"])),
+            created_at=record["created_at"],
+            updated_at=record["updated_at"],
+            favorited=record["favorited"],
+            favorites_count=record["favorites_count"],
+            tags=record["tags"],
         )
-        FROM users
-        WHERE id = author_id
-    ) AS author,
-    (SELECT array_agg(tag_name) FROM articles_to_tags WHERE article_id = id) AS tags
-"""
 
 
 # $1 = current user's ID, maybe null
@@ -125,7 +127,8 @@ WITH matched_tags AS (
         LEFT JOIN articles ON (favorites.article_id = articles.id)
         WHERE ($4::text IS NOT NULL AND users.username = $4::text)
     )
-{_SELECT_ARTICLES}
+SELECT
+{_ARTICLE_FIELDS}
 FROM articles
 WHERE (
     ($2::text IS NULL OR id IN (SELECT article_id FROM matched_tags))
@@ -139,8 +142,12 @@ LIMIT $5
 OFFSET $6
 """
 
+# $1 = current user's ID, maybe null
+# $5 = limit
+# $6 = offset
 GET_ARTICLES_AUTHORED_BY_FOLOWEES = f"""\
-{_SELECT_ARTICLES}
+SELECT
+{_ARTICLE_FIELDS}
 FROM articles
 INNER JOIN followers_to_followings ON (follower_id = $1 AND following_id = articles.author_id)
 ORDER BY created_at ASC
@@ -148,19 +155,33 @@ LIMIT $2
 OFFSET $3
 """
 
+# $1 = current user's ID
 FAVORITE_ARTICLE = """\
 INSERT INTO favorites (user_id, article_id) VALUES ($1, $2)
 ON CONFLICT DO NOTHING
 """
 
+# $1 = current user's ID, maybe null
 DELETE_ARTICLE = """\
 DELETE FROM articles
-WHERE id = $1 AND author_id = $2
+WHERE author_id = $1 AND id = $2
 """
 
 
 class ArticleNotFound(Exception):
     pass
+
+
+# $1 = current user's ID
+UPDATE_ARTICLE = f"""\
+UPDATE articles
+SET title        = COALESCE($3, title),
+    description  = COALESCE($4, description),
+    body         = COALESCE($5, body)
+WHERE author_id = $1 AND id = $2
+RETURNING
+{_ARTICLE_FIELDS}
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,15 +213,22 @@ class ArticlesRepository:
 
         return ArticleCreatedInDB(**article_record)
 
-    async def get_article_by_id(self, id: UUID) -> ArticleInDB | None:
+    async def get_article_by_id(
+        self,
+        *,
+        article_id: UUID,
+        current_user_id: UUID | None,
+    ) -> ArticleInDB:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             article_record: Record | None = await conn.fetchrow(  # type: ignore  # for Pylance
-                GET_ARTICLE_BY_ID, id
+                GET_ARTICLE_BY_ID,
+                current_user_id,
+                article_id,
             )
         if article_record:
-            return ArticleInDB(**article_record)
-        return None
+            return ArticleInDB.from_record(article_record)
+        raise ArticleNotFound
 
     async def list_articles(
         self,
@@ -223,21 +251,7 @@ class ArticlesRepository:
                 limit,
                 offset,
             )
-        return [
-            ArticleInDB(
-                id=record["id"],
-                title=record["title"],
-                description=record["description"],
-                body=record["body"],
-                author=ProfileInDB(**orjson.loads(record["author"])),
-                created_at=record["created_at"],
-                updated_at=record["updated_at"],
-                favorited=record["favorited"],
-                favorites_count=record["favorites_count"],
-                tags=record["tags"],
-            )
-            for record in article_records
-        ]
+        return [ArticleInDB.from_record(record) for record in article_records]
 
     async def get_articles_by_followed_users(
         self,
@@ -253,38 +267,49 @@ class ArticlesRepository:
                 limit,
                 offset,
             )
-        return [
-            ArticleInDB(
-                id=record["id"],
-                title=record["title"],
-                description=record["description"],
-                body=record["body"],
-                author=ProfileInDB(**orjson.loads(record["author"])),
-                created_at=record["created_at"],
-                updated_at=record["updated_at"],
-                favorited=record["favorited"],
-                favorites_count=record["favorites_count"],
-                tags=record["tags"],
-            )
-            for record in article_records
-        ]
+        return [ArticleInDB.from_record(record) for record in article_records]
 
-    async def favorite_article(self, *, user_id: UUID, article_id: UUID) -> None:
+    async def favorite_article(
+        self, *, current_user_id: UUID, article_id: UUID
+    ) -> None:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             await conn.execute(  # type: ignore  # for Pylance
                 FAVORITE_ARTICLE,
-                user_id,
+                current_user_id,
                 article_id,
             )
 
-    async def delete_article(self, *, article_id: UUID, current_user_id: UUID) -> None:
+    async def delete_article(self, *, current_user_id: UUID, article_id: UUID) -> None:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             res = await conn.execute(  # type: ignore  # for Pylance
                 DELETE_ARTICLE,
-                article_id,
                 current_user_id,
+                article_id,
             )
             if res == "DELETE 0":
                 raise ArticleNotFound
+
+    async def update_article(
+        self,
+        *,
+        current_user_id: UUID,
+        article_id: UUID,
+        title: str | None,
+        description: str | None,
+        body: str | None,
+    ) -> ArticleInDB:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            article_record: Record | None = await conn.fetchrow(  # type: ignore  # for Pylance
+                UPDATE_ARTICLE,
+                current_user_id,
+                article_id,
+                title,
+                description,
+                body,
+            )
+            if article_record is None:
+                raise ArticleNotFound
+            return ArticleInDB.from_record(article_record)

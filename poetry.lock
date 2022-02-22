@@ -837,7 +837,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "xpresso"
-version = "0.20.0"
+version = "0.20.2"
 description = "A developer centric, performant Python web framework"
 category = "main"
 optional = false
@@ -1500,6 +1500,6 @@ websockets = [
     {file = "websockets-10.2.tar.gz", hash = "sha256:8351c3c86b08156337b0e4ece0e3c5ec3e01fcd14e8950996832a23c99416098"},
 ]
 xpresso = [
-    {file = "xpresso-0.20.0-py3-none-any.whl", hash = "sha256:98b8b14569beff44269ac3b85fb1a33e9b44ff91446792a87c1fb45821def566"},
-    {file = "xpresso-0.20.0.tar.gz", hash = "sha256:fd840df0ab7850024a21bcae365b87131ef3e04f76150edd615e57944b24c1d7"},
+    {file = "xpresso-0.20.2-py3-none-any.whl", hash = "sha256:081461942cb5ef6339fe67f307d01e0e3b71da3abb24becfc871dd4ed6daa06f"},
+    {file = "xpresso-0.20.2.tar.gz", hash = "sha256:3c810a74728acf1c0e564e22b1f796d95de29c63733b4927b7ba0e48b12b20af"},
 ]

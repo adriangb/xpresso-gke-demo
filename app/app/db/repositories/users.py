@@ -65,11 +65,11 @@ VALUES ($1, $2, $3)
 
 UPDATE_USER = """\
 UPDATE users
-SET username        = COALESCE(username, $2),
-    email           = COALESCE(email, $3),
-    hashed_password = COALESCE(hashed_password, $4),
-    bio             = COALESCE(bio, $5),
-    image           = COALESCE(image, $6)
+SET username        = COALESCE($2, username),
+    email           = COALESCE($3, email),
+    hashed_password = COALESCE($4, hashed_password),
+    bio             = COALESCE($5, bio),
+    image           = COALESCE($6, image)
 WHERE id = $1
 """
 

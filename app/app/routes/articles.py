@@ -4,7 +4,12 @@ from xpresso import FromPath, FromQuery, HTTPException, status
 
 from app.db.repositories.articles import ArticleNotFound, ArticlesRepository
 from app.models.conversions import convert_article_in_db_to_article_in_response
-from app.models.schemas.articles import Article, ArticleInCreate, ArticleInResponse
+from app.models.schemas.articles import (
+    Article,
+    ArticleInCreate,
+    ArticleInResponse,
+    ArticleInUpdate,
+)
 from app.models.schemas.profiles import Profile
 from app.requests import OrJSON
 from app.routes.utils import Pagination
@@ -83,7 +88,7 @@ async def delete_article(
         article_id = UUID(slug)
     except ValueError as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Article {slug} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f'Article "{slug}" not found'
         ) from exc
     # query the db for articles matching the criteria
     try:
@@ -92,5 +97,60 @@ async def delete_article(
         )
     except ArticleNotFound:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Article {slug} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f'Article "{slug}" not found'
         )
+
+
+async def update_article(
+    articles_repo: ArticlesRepository,
+    current_user: RequireLoggedInUser,
+    slug: FromPath[str],
+    article_info: OrJSON[ArticleInUpdate],
+) -> ArticleInResponse:
+    # keep the fact that the slug is a UUID an implementation detail
+    try:
+        article_id = UUID(slug)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f'Article "{slug}" not found'
+        ) from exc
+    # query the db for articles matching the criteria
+    try:
+        article = await articles_repo.update_article(
+            article_id=article_id,
+            current_user_id=current_user.id,
+            title=article_info.article.title,
+            description=article_info.article.description,
+            body=article_info.article.body,
+        )
+    except ArticleNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f'Article "{slug}" not found'
+        )
+    return convert_article_in_db_to_article_in_response(article)
+
+
+async def get_article(
+    articles_repo: ArticlesRepository,
+    slug: FromPath[str],
+    current_user: OptionalLoggedInUser = None,
+) -> ArticleInResponse:
+    # keep the fact that the slug is a UUID an implementation detail
+    try:
+        article_id = UUID(slug)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f'Article "{slug}" not found'
+        ) from exc
+    user_id = current_user.id if current_user is not None else None
+    try:
+        article = await articles_repo.get_article_by_id(
+            current_user_id=user_id,
+            article_id=article_id,
+        )
+    except ArticleNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f'Article "{slug}" not found'
+        )
+    # build and return the article
+    return convert_article_in_db_to_article_in_response(article)

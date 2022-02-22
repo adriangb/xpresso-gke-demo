@@ -68,7 +68,7 @@ async def test_publish_article(
         headers={"Authorization": f"Token {author.token}"},
         json=payload,
     )
-    assert resp.status_code == 200, resp.content
+    assert resp.status_code == 201, resp.content
     article_validation_model.validate(resp.json())
 
 
@@ -143,19 +143,19 @@ async def test_list_articles_filter(
     )
     # and some likes on them
     await articles_repo.favorite_article(
-        user_id=registered_users_with_tokens[0].id,
+        current_user_id=registered_users_with_tokens[0].id,
         article_id=article_3.id,
     )
     await articles_repo.favorite_article(
-        user_id=registered_users_with_tokens[1].id,
+        current_user_id=registered_users_with_tokens[1].id,
         article_id=article_2.id,
     )
     await articles_repo.favorite_article(
-        user_id=registered_users_with_tokens[2].id,
+        current_user_id=registered_users_with_tokens[2].id,
         article_id=article_1.id,
     )
     await articles_repo.favorite_article(
-        user_id=registered_users_with_tokens[2].id,
+        current_user_id=registered_users_with_tokens[2].id,
         article_id=article_3.id,
     )
 
@@ -247,7 +247,7 @@ async def test_delete_article(
         f"/api/articles/{article.id}",
         headers={"Authorization": f"Token {author.token}"},
     )
-    assert resp.status_code == 200, resp.content
+    assert resp.status_code == 204, resp.content
 
     resp = await test_client.get("/api/articles")
     assert resp.status_code == 200, resp.content
@@ -266,11 +266,13 @@ async def test_update_article(
         body="It takes a Jacobian",
         tags=["dragons", "training"],
     )
-    payload = dict(
-        title="New Title",
-        description="New description",
-        body="New body!",
-    )
+    payload = {
+        "article": {
+            "title": "New Title",
+            "description": "New description",
+            "body": "New body!",
+        }
+    }
     resp: Response
     resp = await test_client.put(
         f"/api/articles/{article.id}",
@@ -279,5 +281,9 @@ async def test_update_article(
     )
     assert resp.status_code == 200, resp.content
 
-    resp = await test_client.get("/api/articles")
-    assert resp.json() == {}
+    resp = await test_client.get(f"/api/articles/{article.id}")
+    assert resp.status_code == 200, resp.content
+    received_article = resp.json()["article"]
+    assert received_article["title"] == "New Title"
+    assert received_article["description"] == "New description"
+    assert received_article["body"] == "New body!"
