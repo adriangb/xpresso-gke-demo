@@ -42,12 +42,14 @@ class ArticleInCreate(BaseModel):
     article: ArticleForCreate
 
 
-class ArticleInUpdate(BaseModel):
+class ArticleForUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     body: str | None = None
 
-    Config = ModelInRequestConfig
+
+class ArticleInUpdate(BaseModel):
+    article: ArticleForUpdate
 
 
 class ListOfArticlesInResponse(BaseModel):

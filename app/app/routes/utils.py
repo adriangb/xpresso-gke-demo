@@ -1,18 +1,13 @@
-from xpresso import HTTPException, status
+from dataclasses import dataclass
+from typing import Annotated
 
-from app.models.schemas.auth import Unauthorized
-from app.models.schemas.jwt import Token
-
-PREFIX = "Token "
-PREFIX_LENGTH = len(PREFIX)
+from pydantic import Field
+from xpresso import FromQuery
 
 
-def extract_token_from_authroization_header(authorization_header: str) -> Token:
-    if not authorization_header.startswith(PREFIX):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=Unauthorized.construct(
-                reason="Invalid scheme in Authorization header"
-            ),
-        )
-    return Token(authorization_header[PREFIX_LENGTH:])
+@dataclass(slots=True)
+class Pagination:
+    # super hacky workaround for https://github.com/samuelcolvin/pydantic/issues/2971
+    # otherwise, we'd just use default values instead of pointless lambdas
+    limit: Annotated[FromQuery[int], Field(get=0, le=50, default_factory=lambda: 20)]
+    offset: Annotated[FromQuery[int], Field(get=0, le=1000, default_factory=lambda: 0)]

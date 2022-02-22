@@ -1,17 +1,31 @@
-from xpresso import Path, Router
+from xpresso import Operation, Path, Router
 from xpresso.routing.mount import Mount
 
-from app.responses import create_json_operation
-from app.routes import articles, follow, health, login, profile, user, users
+from app.responses import orjson_response
+from app.routes import articles, feed, follow, health, login, profile, user, users
 
 api_routes = [
-    Path("/users", post=create_json_operation(users.create_user)),
-    Path("/user", get=user.get_user, put=user.update_user),
-    Path("/users/login", post=login.login),
-    Path("/profiles/{username}/follow", post=follow.follow_user),
-    Path("/profiles/{username}/unfollow", post=follow.unfollow_user),
+    Path("/users", post=Operation(users.create_user, **orjson_response())),
+    Path(
+        "/user", get=user.get_user, put=Operation(user.update_user, **orjson_response())
+    ),
+    Path("/users/login", post=Operation(login.login, **orjson_response())),
+    Path(
+        "/profiles/{username}/follow",
+        post=Operation(follow.follow_user, **orjson_response()),
+    ),
+    Path(
+        "/profiles/{username}/unfollow",
+        post=Operation(follow.unfollow_user, **orjson_response()),
+    ),
     Path("/profiles/{username}", get=profile.get_profile),
-    Path("/articles", post=articles.create_article, get=articles.list_articles),
+    Path(
+        "/articles",
+        post=Operation(articles.create_article, **orjson_response()),
+        get=articles.list_articles,
+    ),
+    Path("/articles/feed", get=feed.get_user_feed),
+    Path("/articles/{slug}", delete=articles.delete_article),
 ]
 
 routes = [

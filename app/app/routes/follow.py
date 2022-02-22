@@ -1,23 +1,19 @@
-from xpresso import FromHeader, FromPath, HTTPException, status
+from xpresso import FromPath, HTTPException, status
 
-from app.db.repositories.profiles import FolloweeDoesNotExist, ProfilesRepository
+from app.db.repositories.users import FolloweeDoesNotExist, UsersRepository
 from app.models.schemas.profiles import Profile, ProfileInResponse
-from app.routes.utils import extract_token_from_authroization_header
-from app.services.auth import AuthService
+from app.services.user import RequireLoggedInUser
 
 
 async def follow_user(
     username: FromPath[str],
-    authorization: FromHeader[str],
-    auth_service: AuthService,
-    repo: ProfilesRepository,
+    current_user: RequireLoggedInUser,
+    repo: UsersRepository,
 ) -> ProfileInResponse:
-    token = extract_token_from_authroization_header(authorization)
-    user_id = auth_service.verify_access_token_and_extract_user_id(token)
     # make the link
     try:
         followed_profile = await repo.follow_user(
-            username_to_follow=username, id_of_current_user=user_id
+            username_to_follow=username, id_of_current_user=current_user.id
         )
     except FolloweeDoesNotExist:
         raise HTTPException(
@@ -37,16 +33,14 @@ async def follow_user(
 
 async def unfollow_user(
     username: FromPath[str],
-    authorization: FromHeader[str],
-    auth_service: AuthService,
-    repo: ProfilesRepository,
+    current_user: RequireLoggedInUser,
+    repo: UsersRepository,
 ) -> ProfileInResponse:
-    token = extract_token_from_authroization_header(authorization)
-    user_id = auth_service.verify_access_token_and_extract_user_id(token)
     # unlink in db
     try:
         followed_profile = await repo.unfollow_user(
-            username_to_unfollow=username, id_of_current_user=user_id
+            username_to_unfollow=username,
+            id_of_current_user=current_user.id,
         )
     except FolloweeDoesNotExist:
         raise HTTPException(

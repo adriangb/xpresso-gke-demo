@@ -2,18 +2,18 @@ import random
 
 from httpx import AsyncClient, Response
 
-from app.db.repositories.profiles import ProfilesRepository
+from app.db.repositories.users import UsersRepository
 from tests.integration.conftest import RegistedUserWithToken
 
 
 async def test_get_profile_following(
     test_client: AsyncClient,
     registered_users_with_tokens: list[RegistedUserWithToken],
-    followers_repo: ProfilesRepository,
+    users_repo: UsersRepository,
 ) -> None:
     follower = random.choice(registered_users_with_tokens)
     following = next(u for u in registered_users_with_tokens if u is not follower)
-    await followers_repo.follow_user(following.user.username, follower.id)
+    await users_repo.follow_user(following.user.username, follower.id)
 
     expected_response = {
         "profile": {

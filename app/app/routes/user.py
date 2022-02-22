@@ -1,56 +1,30 @@
-from xpresso import FromHeader, FromJson, HTTPException, status
-
 from app.db.repositories.users import UsersRepository
 from app.dependencies import PasswordHasher
-from app.models.schemas.auth import Unauthorized
 from app.models.schemas.users import UserInResponse, UserInUpdate, UserWithToken
-from app.routes.utils import extract_token_from_authroization_header
-from app.services.auth import AuthService
+from app.requests import OrJSON
+from app.services.user import RequireLoggedInUser
 
 
-async def get_user(
-    authorization: FromHeader[str],
-    auth_service: AuthService,
-    repo: UsersRepository,
-) -> UserInResponse:
-    token = extract_token_from_authroization_header(authorization)
-    user_id = auth_service.verify_access_token_and_extract_user_id(token)
-    # check that the user exists in the database
-    maybe_user_in_db = await repo.get_user_by_id(id=user_id)
-    if maybe_user_in_db is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=Unauthorized.construct(reason="Invalid credentials"),
-        )
+async def get_user(current_user: RequireLoggedInUser) -> UserInResponse:
     # build and return the user model
     return UserInResponse.construct(
         user=UserWithToken.construct(
-            username=maybe_user_in_db.username,
-            email=maybe_user_in_db.email,
-            bio=maybe_user_in_db.bio,
-            image=maybe_user_in_db.image,
-            token=token,
+            username=current_user.username,
+            email=current_user.email,
+            bio=current_user.bio,
+            image=current_user.image,
+            token=current_user.token,
         )
     )
 
 
 async def update_user(
-    user: FromJson[UserInUpdate],
-    authorization: FromHeader[str],
-    auth_service: AuthService,
+    updated_user_info: OrJSON[UserInUpdate],
+    current_user: RequireLoggedInUser,
     repo: UsersRepository,
     hasher: PasswordHasher,
 ) -> UserInResponse:
-    user_info = user.user
-    token = extract_token_from_authroization_header(authorization)
-    user_id = auth_service.verify_access_token_and_extract_user_id(token)
-    # check that the user exists in the database
-    maybe_user_in_db = await repo.get_user_by_id(id=user_id)
-    if maybe_user_in_db is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=Unauthorized.construct(reason="Invalid credentials"),
-        )
+    user_info = updated_user_info.user
     # check if they are changing their password
     if user_info.password is not None:
         hashed_password = hasher.hash(user_info.password)
@@ -58,7 +32,7 @@ async def update_user(
         hashed_password = None
     # update the user in the database
     await repo.update_user(
-        user_id=user_id,
+        id_of_current_user=current_user.id,
         username=user_info.username,
         email=user_info.email,
         hashed_password=hashed_password,
@@ -68,10 +42,10 @@ async def update_user(
     # build and return the user model
     return UserInResponse.construct(
         user=UserWithToken.construct(
-            username=user_info.username or maybe_user_in_db.username,
-            email=user_info.email or maybe_user_in_db.email,
-            bio=user_info.bio if user_info.bio is not None else maybe_user_in_db.bio,
-            image=maybe_user_in_db.image or maybe_user_in_db.image,
-            token=token,
+            username=user_info.username or current_user.username,
+            email=user_info.email or current_user.email,
+            bio=user_info.bio if user_info.bio is not None else current_user.bio,
+            image=current_user.image or current_user.image,
+            token=current_user.token,
         )
     )

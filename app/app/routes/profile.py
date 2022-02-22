@@ -1,28 +1,24 @@
-from xpresso import FromHeader, FromPath, HTTPException, status
+from xpresso import FromPath, HTTPException, status
 
-from app.db.repositories.profiles import FolloweeDoesNotExist, ProfilesRepository
+from app.db.repositories.users import FolloweeDoesNotExist, UsersRepository
 from app.models.schemas.profiles import Profile, ProfileInResponse
-from app.routes.utils import extract_token_from_authroization_header
-from app.services.auth import AuthService
+from app.services.user import RequireLoggedInUser
 
 
 async def get_profile(
     username: FromPath[str],
-    authorization: FromHeader[str],
-    auth_service: AuthService,
-    repo: ProfilesRepository,
+    current_user: RequireLoggedInUser,
+    repo: UsersRepository,
 ) -> ProfileInResponse:
-    token = extract_token_from_authroization_header(authorization)
-    user_id = auth_service.verify_access_token_and_extract_user_id(token)
     try:
         profile = await repo.get_profile(
-            username_of_target_profile=username, id_of_current_user=user_id
+            username_of_target_profile=username, id_of_current_user=current_user.id
         )
-    except FolloweeDoesNotExist:
+    except FolloweeDoesNotExist as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"reason": f"No user found with username {username}"},
-        )
+        ) from exc
     # build and return the profile
     return ProfileInResponse(
         profile=Profile(

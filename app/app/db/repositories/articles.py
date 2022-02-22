@@ -80,32 +80,14 @@ class ArticleInDB:
     favorites_count: int
 
 
-# $1 = current user's ID, maybe null
-# $2 = tag filter, maybe null
-# $3 = username filter, maybe null
-# $4 = favorited username filter, maybe null
-# $5 = limit
-# $6 = offset
-# Note the explicit casts, they are needed to help PostgreSQL understand the types
-FILTER_ARTICLES = """\
-WITH matched_tags AS (
-        SELECT article_id, tag_name FROM articles_to_tags
-        WHERE $2::text IS NOT NULL AND tag_name = $2::text
-    ), filter_author AS (
-        SELECT id FROM users
-        WHERE ($3::text IS NOT NULL AND username = $3::text)
-    ), filter_favorited_by_user AS (
-        SELECT id FROM users
-        WHERE ($4::text IS NOT NULL AND username = $4::text)
-    )
+_SELECT_ARTICLES = """\
 SELECT
-    id,
-    title,
-    description,
-    body,
-    author_id,
-    created_at,
-    updated_at,
+    articles.id,
+    articles.title,
+    articles.description,
+    articles.body,
+    articles.created_at,
+    articles.updated_at,
     EXISTS(SELECT 1 FROM favorites WHERE $1::uuid IS NOT NULL AND user_id = $1::uuid AND article_id = id) AS favorited,
     (SELECT COUNT(*) FROM favorites WHERE article_id = id) AS favorites_count,
     (
@@ -119,18 +101,66 @@ SELECT
         WHERE id = author_id
     ) AS author,
     (SELECT array_agg(tag_name) FROM articles_to_tags WHERE article_id = id) AS tags
+"""
+
+
+# $1 = current user's ID, maybe null
+# $2 = tag filter, maybe null
+# $3 = username filter, maybe null
+# $4 = favorited username filter, maybe null
+# $5 = limit
+# $6 = offset
+# Note the explicit casts, they are needed to help PostgreSQL understand the types
+SEARCH_ARTICLES = f"""\
+WITH matched_tags AS (
+        SELECT article_id, tag_name FROM articles_to_tags
+        WHERE $2::text IS NOT NULL AND tag_name = $2::text
+    ), filter_author AS (
+        SELECT id FROM users
+        WHERE ($3::text IS NOT NULL AND username = $3::text)
+    ), articles_favorited_by_filter_user AS (
+        SELECT articles.id
+        FROM users
+        LEFT JOIN favorites ON (favorites.user_id = users.id)
+        LEFT JOIN articles ON (favorites.article_id = articles.id)
+        WHERE ($4::text IS NOT NULL AND users.username = $4::text)
+    )
+{_SELECT_ARTICLES}
 FROM articles
 WHERE (
     ($2::text IS NULL OR id IN (SELECT article_id FROM matched_tags))
     AND
     ($3::text IS NULL OR author_id IN (SELECT id FROM filter_author))
     AND
-    ($4::text IS NULL OR author_id IN (SELECT id FROM filter_favorited_by_user))
+    ($4::text IS NULL OR id IN (SELECT id FROM articles_favorited_by_filter_user))
 )
 ORDER BY created_at ASC
 LIMIT $5
 OFFSET $6
 """
+
+GET_ARTICLES_AUTHORED_BY_FOLOWEES = f"""\
+{_SELECT_ARTICLES}
+FROM articles
+INNER JOIN followers_to_followings ON (follower_id = $1 AND following_id = articles.author_id)
+ORDER BY created_at ASC
+LIMIT $2
+OFFSET $3
+"""
+
+FAVORITE_ARTICLE = """\
+INSERT INTO favorites (user_id, article_id) VALUES ($1, $2)
+ON CONFLICT DO NOTHING
+"""
+
+DELETE_ARTICLE = """\
+DELETE FROM articles
+WHERE id = $1 AND author_id = $2
+"""
+
+
+class ArticleNotFound(Exception):
+    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,7 +215,7 @@ class ArticlesRepository:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             article_records: list[Record] = await conn.fetch(  # type: ignore  # for Pylance
-                FILTER_ARTICLES,
+                SEARCH_ARTICLES,
                 current_user_id,
                 tag,
                 author_username,
@@ -208,3 +238,53 @@ class ArticlesRepository:
             )
             for record in article_records
         ]
+
+    async def get_articles_by_followed_users(
+        self,
+        current_user_id: UUID | None,
+        limit: int,
+        offset: int,
+    ) -> list[ArticleInDB]:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            article_records: list[Record] = await conn.fetch(  # type: ignore  # for Pylance
+                GET_ARTICLES_AUTHORED_BY_FOLOWEES,
+                current_user_id,
+                limit,
+                offset,
+            )
+        return [
+            ArticleInDB(
+                id=record["id"],
+                title=record["title"],
+                description=record["description"],
+                body=record["body"],
+                author=ProfileInDB(**orjson.loads(record["author"])),
+                created_at=record["created_at"],
+                updated_at=record["updated_at"],
+                favorited=record["favorited"],
+                favorites_count=record["favorites_count"],
+                tags=record["tags"],
+            )
+            for record in article_records
+        ]
+
+    async def favorite_article(self, *, user_id: UUID, article_id: UUID) -> None:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            await conn.execute(  # type: ignore  # for Pylance
+                FAVORITE_ARTICLE,
+                user_id,
+                article_id,
+            )
+
+    async def delete_article(self, *, article_id: UUID, current_user_id: UUID) -> None:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            res = await conn.execute(  # type: ignore  # for Pylance
+                DELETE_ARTICLE,
+                article_id,
+                current_user_id,
+            )
+            if res == "DELETE 0":
+                raise ArticleNotFound

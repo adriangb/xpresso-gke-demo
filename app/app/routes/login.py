@@ -1,14 +1,15 @@
 from argon2.exceptions import VerificationError
-from xpresso import FromJson, HTTPException, status
+from xpresso import HTTPException, status
 
 from app.db.repositories.users import UsersRepository
 from app.dependencies import PasswordHasher
 from app.models.schemas.users import UserInLogin, UserInResponse, UserWithToken
+from app.requests import OrJSON
 from app.services.auth import AuthService
 
 
 async def login(
-    user: FromJson[UserInLogin],
+    user: OrJSON[UserInLogin],
     auth_service: AuthService,
     repo: UsersRepository,
     hasher: PasswordHasher,
@@ -24,16 +25,16 @@ async def login(
     # check that the password matches
     try:
         hasher.verify(maybe_user_in_db.hashed_password, user_info.password)
-    except VerificationError as e:
+    except VerificationError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"reason": "Invalid credentials"},
-        ) from e
+        ) from exc
     # rehash the password if needed
     if hasher.check_needs_rehash(maybe_user_in_db.hashed_password):
         hashed_password = hasher.hash(user_info.password)
         await repo.update_user(
-            user_id=maybe_user_in_db.id, hashed_password=hashed_password
+            id_of_current_user=maybe_user_in_db.id, hashed_password=hashed_password
         )
     # create a jwt token
     token = auth_service.create_access_token(user_id=maybe_user_in_db.id)

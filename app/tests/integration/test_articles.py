@@ -6,6 +6,7 @@ from httpx import AsyncClient, Response
 from pydantic import BaseModel, Field
 
 from app.db.repositories.articles import ArticlesRepository
+from app.db.repositories.users import UsersRepository
 from tests.integration.conftest import RegistedUserWithToken
 from tests.integration.fixtures.repos import REGISTERED_USERS_INFO
 
@@ -105,6 +106,10 @@ async def test_list_articles(
         ({"author": REGISTERED_USERS_INFO[0].username}, ["1", "2"]),
         ({"author": REGISTERED_USERS_INFO[1].username}, ["3"]),
         ({"author": REGISTERED_USERS_INFO[2].username}, []),
+        # by favorited
+        ({"favorited": REGISTERED_USERS_INFO[0].username}, ["3"]),
+        ({"favorited": REGISTERED_USERS_INFO[1].username}, ["2"]),
+        ({"favorited": REGISTERED_USERS_INFO[2].username}, ["1", "3"]),
     ],
 )
 async def test_list_articles_filter(
@@ -112,9 +117,87 @@ async def test_list_articles_filter(
     expected_titles: list[str],
     test_client: AsyncClient,
     registered_users_with_tokens: list[RegistedUserWithToken],
-    article_validation_model: Type[BaseModel],
     articles_repo: ArticlesRepository,
 ) -> None:
+    # create a couple of articles
+    article_1 = await articles_repo.create_article(
+        author_id=registered_users_with_tokens[0].id,
+        title="1",
+        description="",
+        body="",
+        tags=["tag1", "tag2"],
+    )
+    article_2 = await articles_repo.create_article(
+        author_id=registered_users_with_tokens[0].id,
+        title="2",
+        description="",
+        body="",
+        tags=["tag2", "tag3"],
+    )
+    article_3 = await articles_repo.create_article(
+        author_id=registered_users_with_tokens[1].id,
+        title="3",
+        description="",
+        body="",
+        tags=["tag4"],
+    )
+    # and some likes on them
+    await articles_repo.favorite_article(
+        user_id=registered_users_with_tokens[0].id,
+        article_id=article_3.id,
+    )
+    await articles_repo.favorite_article(
+        user_id=registered_users_with_tokens[1].id,
+        article_id=article_2.id,
+    )
+    await articles_repo.favorite_article(
+        user_id=registered_users_with_tokens[2].id,
+        article_id=article_1.id,
+    )
+    await articles_repo.favorite_article(
+        user_id=registered_users_with_tokens[2].id,
+        article_id=article_3.id,
+    )
+
+    resp: Response = await test_client.get(
+        "/api/articles",
+        headers={"Authorization": f"Token {registered_users_with_tokens[2].token}"},
+        params=params,
+    )
+    assert resp.status_code == 200, resp.content
+    assert [res["article"]["title"] for res in resp.json()] == expected_titles
+
+
+@pytest.mark.parametrize(
+    "current_user_idx,expected_titles",
+    [
+        (0, []),
+        (1, ["1", "2"]),
+        (2, ["1", "2", "3"]),
+    ],
+)
+async def test_articles_feed(
+    current_user_idx: int,
+    expected_titles: list[str],
+    test_client: AsyncClient,
+    registered_users_with_tokens: list[RegistedUserWithToken],
+    articles_repo: ArticlesRepository,
+    users_repo: UsersRepository,
+) -> None:
+    # follow users
+    await users_repo.follow_user(
+        username_to_follow=registered_users_with_tokens[0].user.username,
+        id_of_current_user=registered_users_with_tokens[1].id,
+    )
+    await users_repo.follow_user(
+        username_to_follow=registered_users_with_tokens[0].user.username,
+        id_of_current_user=registered_users_with_tokens[2].id,
+    )
+    await users_repo.follow_user(
+        username_to_follow=registered_users_with_tokens[1].user.username,
+        id_of_current_user=registered_users_with_tokens[2].id,
+    )
+    # create a couple of articles
     await articles_repo.create_article(
         author_id=registered_users_with_tokens[0].id,
         title="1",
@@ -138,9 +221,63 @@ async def test_list_articles_filter(
     )
 
     resp: Response = await test_client.get(
-        "/api/articles",
-        headers={"Authorization": f"Token {registered_users_with_tokens[2].token}"},
-        params=params,
+        "/api/articles/feed",
+        headers={
+            "Authorization": f"Token {registered_users_with_tokens[current_user_idx].token}"
+        },
     )
     assert resp.status_code == 200, resp.content
     assert [res["article"]["title"] for res in resp.json()] == expected_titles
+
+
+async def test_delete_article(
+    test_client: AsyncClient,
+    author: RegistedUserWithToken,
+    articles_repo: ArticlesRepository,
+) -> None:
+    article = await articles_repo.create_article(
+        author_id=author.id,
+        title="How to train your dragon",
+        description="Ever wonder how?",
+        body="It takes a Jacobian",
+        tags=["dragons", "training"],
+    )
+    resp: Response
+    resp = await test_client.delete(
+        f"/api/articles/{article.id}",
+        headers={"Authorization": f"Token {author.token}"},
+    )
+    assert resp.status_code == 200, resp.content
+
+    resp = await test_client.get("/api/articles")
+    assert resp.status_code == 200, resp.content
+    assert resp.json() == []
+
+
+async def test_update_article(
+    test_client: AsyncClient,
+    author: RegistedUserWithToken,
+    articles_repo: ArticlesRepository,
+) -> None:
+    article = await articles_repo.create_article(
+        author_id=author.id,
+        title="How to train your dragon",
+        description="Ever wonder how?",
+        body="It takes a Jacobian",
+        tags=["dragons", "training"],
+    )
+    payload = dict(
+        title="New Title",
+        description="New description",
+        body="New body!",
+    )
+    resp: Response
+    resp = await test_client.put(
+        f"/api/articles/{article.id}",
+        headers={"Authorization": f"Token {author.token}"},
+        json=payload,
+    )
+    assert resp.status_code == 200, resp.content
+
+    resp = await test_client.get("/api/articles")
+    assert resp.json() == {}
