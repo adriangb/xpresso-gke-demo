@@ -191,6 +191,21 @@ RETURNING
 {_ARTICLE_FIELDS}
 """
 
+# $1 = current user's ID
+# $2 = comment ID
+DELETE_COMMENT = """\
+DELETE FROM commnets
+WHERE author_id = $1 AND id = $2
+"""
+
+# $1 = current user's ID
+# $2 = article_id
+# $3 = comment body
+CREATE_COMMENT = """\
+INSERT INTO comments (author_id, article_id, body) VALUES ($1, $2, $3)
+RETURNING id
+"""
+
 
 @dataclass(frozen=True, slots=True)
 class ArticlesRepository:
