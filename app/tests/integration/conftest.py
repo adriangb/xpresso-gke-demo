@@ -7,7 +7,27 @@ from xpresso import App
 from app.db.repositories.users import UsersRepository
 from app.main import app
 from app.services.auth import AuthService
-from tests.integration.fixtures.repos import RegisterdUser
+from tests.integration.fixtures.client import test_client
+from tests.integration.fixtures.db import admin_db_connection, app_db_pool
+from tests.integration.fixtures.repos import (
+    RegisterdUser,
+    articles_repo,
+    followers_repo,
+    registered_users,
+    users_repo,
+)
+from tests.integration.fixtures.services import auth_service
+
+__all__ = [
+    "auth_service",
+    "registered_users",
+    "followers_repo",
+    "articles_repo",
+    "app_db_pool",
+    "admin_db_connection",
+    "test_client",
+    "users_repo",
+]
 
 
 @pytest.fixture(scope="session")

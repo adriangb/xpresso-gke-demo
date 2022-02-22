@@ -127,6 +127,7 @@ WHERE (
     AND
     ($4::text IS NULL OR author_id IN (SELECT id FROM filter_favorited_by_user))
 )
+ORDER BY created_at ASC
 LIMIT $5
 OFFSET $6
 """
