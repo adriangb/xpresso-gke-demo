@@ -17,19 +17,8 @@ from app.requests import OrJSON
 from app.services.user import OptionalLoggedInUser, RequireLoggedInUser
 
 
-def article_id_from_slug(slug: str) -> UUID:
-    # keep the fact that the slug is a UUID an implementation detail
-    try:
-        article_id = UUID(slug)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f'Article "{slug}" not found'
-        ) from exc
-    return article_id
-
-
 @contextmanager
-def handle_article_not_found(slug: str) -> Iterator[None]:
+def handle_article_not_found(slug: UUID) -> Iterator[None]:
     try:
         yield
     except ArticleNotFound:
@@ -79,11 +68,11 @@ async def create_article(
 async def delete_article(
     articles_repo: ArticlesRepository,
     current_user: RequireLoggedInUser,
-    slug: FromPath[str],
+    slug: FromPath[UUID],
 ) -> None:
     with handle_article_not_found(slug):
         await articles_repo.delete_article(
-            article_id=article_id_from_slug(slug),
+            article_id=slug,
             current_user_id=current_user.id,
         )
 
@@ -91,12 +80,12 @@ async def delete_article(
 async def update_article(
     articles_repo: ArticlesRepository,
     current_user: RequireLoggedInUser,
-    slug: FromPath[str],
+    slug: FromPath[UUID],
     article_info: OrJSON[ArticleInUpdate],
 ) -> ArticleInResponse:
     with handle_article_not_found(slug):
         article = await articles_repo.update_article(
-            article_id=article_id_from_slug(slug),
+            article_id=slug,
             current_user_id=current_user.id,
             title=article_info.article.title,
             description=article_info.article.description,
@@ -107,38 +96,38 @@ async def update_article(
 
 async def get_article(
     articles_repo: ArticlesRepository,
-    slug: FromPath[str],
+    slug: FromPath[UUID],
     current_user: OptionalLoggedInUser = None,
 ) -> ArticleInResponse:
     with handle_article_not_found(slug):
         article = await articles_repo.get_article_by_id(
             current_user_id=current_user.id if current_user is not None else None,
-            article_id=article_id_from_slug(slug),
+            article_id=slug,
         )
     return convert_article_in_db_to_article_in_response(article)
 
 
 async def favorite_article(
     articles_repo: ArticlesRepository,
-    slug: FromPath[str],
+    slug: FromPath[UUID],
     current_user: RequireLoggedInUser,
 ) -> ArticleInResponse:
     with handle_article_not_found(slug):
         article = await articles_repo.favorite_article(
             current_user_id=current_user.id,
-            article_id=article_id_from_slug(slug),
+            article_id=slug,
         )
     return convert_article_in_db_to_article_in_response(article)
 
 
 async def unfavorite_article(
     articles_repo: ArticlesRepository,
-    slug: FromPath[str],
+    slug: FromPath[UUID],
     current_user: RequireLoggedInUser,
 ) -> ArticleInResponse:
     with handle_article_not_found(slug):
         article = await articles_repo.unfavorite_article(
             current_user_id=current_user.id,
-            article_id=article_id_from_slug(slug),
+            article_id=slug,
         )
     return convert_article_in_db_to_article_in_response(article)

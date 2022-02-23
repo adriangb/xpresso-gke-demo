@@ -5,6 +5,7 @@ from app.responses import empty_response, orjson_response
 from app.routes import (
     article,
     articles,
+    comments,
     follow,
     health,
     login,
@@ -65,6 +66,18 @@ api_routes = [
     Path(
         "/tags",
         get=Operation(tags.list_tags, **orjson_response()),
+    ),
+    Path(
+        "/articles/{slug}/comments",
+        post=Operation(
+            comments.create_comment,
+            **orjson_response(status_code=status.HTTP_201_CREATED)
+        ),
+        get=Operation(comments.get_comments_for_article, **orjson_response()),
+    ),
+    Path(
+        "/articles/{slug}/comment/{comment_id}",
+        post=Operation(comments.delete_comment, **empty_response()),
     ),
 ]
 

@@ -1,18 +1,17 @@
 from datetime import datetime
+
 from pydantic import BaseModel
 
-from app.models.schemas.profiles import Profile, ProfileInResponse
 from app.models.schemas.configs import ModelInResponseConfig
+from app.models.schemas.profiles import Profile
 
 
-class Comment(BaseModel):
-    body: str
-    author: Profile
-
-
-class CommentForResponse(Comment):
+class CommentForResponse(BaseModel):
+    id: str
     created_at: datetime
     updated_at: datetime
+    body: str
+    author: Profile
 
     Config = ModelInResponseConfig
 
@@ -21,9 +20,13 @@ class CommentInResponse(BaseModel):
     comment: CommentForResponse
 
 
-class ListOfCommentsInResponse(BaseModel):
+class CommentsInResponse(BaseModel):
     comments: list[CommentForResponse]
 
 
-class CommentInCreate(BaseModel):
+class CommentForCreate(BaseModel):
     body: str
+
+
+class CommentInCreate(BaseModel):
+    comment: CommentForCreate

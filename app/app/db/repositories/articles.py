@@ -202,9 +202,59 @@ WHERE author_id = $1 AND id = $2
 # $2 = article_id
 # $3 = comment body
 CREATE_COMMENT = """\
-INSERT INTO comments (author_id, article_id, body) VALUES ($1, $2, $3)
-RETURNING id
+WITH created_comment AS (
+    INSERT INTO comments (author_id, article_id, body) VALUES ($1, $2, $3)
+    RETURNING id, created_at, updated_at
+)
+SELECT
+    id,
+    created_at,
+    updated_at,
+    (
+        SELECT json_build_object(
+            'username', username,
+            'bio', bio,
+            'image', image
+        )
+        FROM users
+        WHERE id = $1
+    ) AS author
+FROM created_comment
 """
+
+# $1 = current user's ID, maybe null
+# $2 = article_id
+GET_COMMENTS_FOR_ARTICLE = """\
+SELECT
+    id,
+    created_at,
+    updated_at,
+    body,
+    (
+        SELECT json_build_object(
+            'username', username,
+            'bio', bio,
+            'image', image,
+            'following', EXISTS(SELECT 1 FROM followers_to_followings WHERE $1::uuid IS NOT NULL AND follower_id = $1::uuid AND following_id = author_id)
+        )
+        FROM users
+        WHERE id = comments.author_id
+    ) AS author
+FROM comments
+"""
+
+
+@dataclass(slots=True)
+class CommentInDB:
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+    body: str
+    author: ProfileInDB
+
+
+class CommentNotFound(Exception):
+    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -365,3 +415,68 @@ class ArticlesRepository:
             if article_record is None:
                 raise ArticleNotFound
             return ArticleInDB.from_record(article_record)
+
+    async def add_comment_to_article(
+        self,
+        *,
+        current_user_id: UUID,
+        article_id: UUID,
+        body: str,
+    ) -> CommentInDB:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            comment_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
+                CREATE_COMMENT,
+                current_user_id,
+                article_id,
+                body,
+            )
+            return CommentInDB(
+                id=comment_record["id"],
+                created_at=comment_record["created_at"],
+                updated_at=comment_record["updated_at"],
+                body=body,
+                author=ProfileInDB(
+                    **orjson.loads(comment_record["author"]), following=False
+                ),
+            )
+
+    async def delete_comment(
+        self,
+        *,
+        current_user_id: UUID,
+        comment_id: UUID,
+    ) -> None:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            res = await conn.execute(  # type: ignore  # for Pylance
+                DELETE_COMMENT,
+                current_user_id,
+                comment_id,
+            )
+            if res == "DELETE 0":
+                raise CommentNotFound
+
+    async def get_comments_for_article(
+        self,
+        *,
+        current_user_id: UUID | None,
+        article_id: UUID,
+    ) -> list[CommentInDB]:
+        conn: asyncpg.Connection
+        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
+            comment_records: list[Record] = await conn.fetchrow(  # type: ignore  # for Pylance
+                GET_COMMENTS_FOR_ARTICLE,
+                current_user_id,
+                article_id,
+            )
+            return [
+                CommentInDB(
+                    id=comment_record["id"],
+                    created_at=comment_record["created_at"],
+                    updated_at=comment_record["updated_at"],
+                    body=comment_record["body"],
+                    author=ProfileInDB(**orjson.loads(comment_record["author"])),
+                )
+                for comment_record in comment_records
+            ]
