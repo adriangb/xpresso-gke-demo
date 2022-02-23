@@ -1,12 +1,12 @@
 from dataclasses import asdict, dataclass
-from typing import Annotated
 
-from xpresso import Depends, HTTPException, status
+from xpresso import HTTPException, status
+from xpresso.dependencies.models import Singleton
 
-from app.db.repositories.users import InjectUsersRepo, UserInDB
+from app.db.repositories.users import UserInDB, UsersRepo
 from app.models.schemas.auth import Unauthorized
 from app.models.schemas.jwt import Token
-from app.services.auth import InjectAuthService
+from app.services.auth import AuthService
 
 UNAUTHORIZED = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED, detail={"Invalid authentication"}
@@ -32,9 +32,9 @@ class LoggedInUser(UserInDB):
 
 
 @dataclass(slots=True)
-class UsersService:
-    auth_service: InjectAuthService
-    users_repo: InjectUsersRepo
+class UserService(Singleton):
+    auth_service: AuthService
+    users_repo: UsersRepo
 
     async def get_current_user(self, authorization: str) -> LoggedInUser:
         token = extract_token_from_authroization_header(authorization)
@@ -46,6 +46,3 @@ class UsersService:
                 detail=Unauthorized.construct(reason="Invalid credentials"),
             )
         return LoggedInUser(**asdict(maybe_user_in_db), token=token)
-
-
-InjectUsersService = Annotated[UsersService, Depends(scope="app")]

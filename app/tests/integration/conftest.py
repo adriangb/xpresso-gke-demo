@@ -4,7 +4,7 @@ from typing import Generator
 import pytest
 from xpresso import App
 
-from app.db.repositories.users import UsersRepository
+from app.db.repositories.users import UsersRepo
 from app.main import app
 from app.services.auth import AuthService
 from tests.integration.fixtures.client import test_client
@@ -53,10 +53,10 @@ def registered_users_with_tokens(
 
 @pytest.fixture
 def test_app(
-    users_repo: UsersRepository,
+    users_repo: UsersRepo,
     auth_service: AuthService,
 ) -> Generator[App, None, None]:
     with app.dependency_overrides as overrides:
-        overrides[UsersRepository] = lambda: users_repo
+        overrides[UsersRepo] = lambda: users_repo
         overrides[AuthService] = lambda: auth_service
         yield app

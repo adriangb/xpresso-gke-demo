@@ -4,7 +4,7 @@ from uuid import UUID
 
 from xpresso import FromJson, FromPath, HTTPException, status
 
-from app.db.repositories.articles import ArticleNotFound, InjectArticlesRepo
+from app.db.repositories.articles import ArticleNotFound, ArticlesRepo
 from app.dependencies import OptionalLoggedInUser, RequireLoggedInUser
 from app.models.conversions import convert_article_in_db_to_article_in_response
 from app.models.schemas.articles import (
@@ -29,7 +29,7 @@ def handle_article_not_found(slug: UUID) -> Iterator[None]:
 async def create_article(
     current_user: RequireLoggedInUser,
     article: FromJson[ArticleInCreate],
-    articles_repo: InjectArticlesRepo,
+    articles_repo: ArticlesRepo,
 ) -> ArticleInResponse:
     # verify the author's idenetity
     # publish the article
@@ -65,7 +65,7 @@ async def create_article(
 
 
 async def delete_article(
-    articles_repo: InjectArticlesRepo,
+    articles_repo: ArticlesRepo,
     current_user: RequireLoggedInUser,
     slug: FromPath[UUID],
 ) -> None:
@@ -77,7 +77,7 @@ async def delete_article(
 
 
 async def update_article(
-    articles_repo: InjectArticlesRepo,
+    articles_repo: ArticlesRepo,
     current_user: RequireLoggedInUser,
     slug: FromPath[UUID],
     article_info: FromJson[ArticleInUpdate],
@@ -94,7 +94,7 @@ async def update_article(
 
 
 async def get_article(
-    articles_repo: InjectArticlesRepo,
+    articles_repo: ArticlesRepo,
     slug: FromPath[UUID],
     current_user: OptionalLoggedInUser = None,
 ) -> ArticleInResponse:
@@ -107,7 +107,7 @@ async def get_article(
 
 
 async def favorite_article(
-    articles_repo: InjectArticlesRepo,
+    articles_repo: ArticlesRepo,
     slug: FromPath[UUID],
     current_user: RequireLoggedInUser,
 ) -> ArticleInResponse:
@@ -120,7 +120,7 @@ async def favorite_article(
 
 
 async def unfavorite_article(
-    articles_repo: InjectArticlesRepo,
+    articles_repo: ArticlesRepo,
     slug: FromPath[UUID],
     current_user: RequireLoggedInUser,
 ) -> ArticleInResponse:

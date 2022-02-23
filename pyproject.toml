@@ -22,7 +22,7 @@ PyJWT = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 requests = "~2"     # for TestClient
-black = {version = "*", allow-prereleases = true}
+black = ">=0.22.0"
 pytest = "~7"
 pytest-sugar = "~0"
 pre-commit = "~2"
@@ -30,9 +30,9 @@ isort = "~5"
 flake8 = "~4"
 mypy = ">=0.931"
 pytest-cov = "~3"
-coverage = {extras = ["toml"], version = "^~6"}
-httpx = "^0.22.0"
-asgi-lifespan = "^1.0.1"
+coverage = {extras = ["toml"], version = "~6"}
+httpx = "~0"
+asgi-lifespan = "~1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

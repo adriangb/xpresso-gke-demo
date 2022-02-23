@@ -5,8 +5,8 @@ import pytest
 from httpx import AsyncClient, Response
 from pydantic import BaseModel, Field
 
-from app.db.repositories.articles import ArticlesRepository
-from app.db.repositories.users import UsersRepository
+from app.db.repositories.articles import ArticlesRepo
+from app.db.repositories.users import UsersRepo
 from tests.integration.conftest import RegistedUserWithToken
 from tests.integration.fixtures.repos import REGISTERED_USERS_INFO
 
@@ -73,7 +73,7 @@ async def test_list_articles(
     test_client: AsyncClient,
     author: RegistedUserWithToken,
     article_validation_model: Type[BaseModel],
-    articles_repo: ArticlesRepository,
+    articles_repo: ArticlesRepo,
 ) -> None:
     """Test the shape of the data returned by GET /articles"""
     await articles_repo.create_article(
@@ -114,7 +114,7 @@ async def test_list_articles_filter(
     expected_titles: list[str],
     test_client: AsyncClient,
     registered_users_with_tokens: list[RegistedUserWithToken],
-    articles_repo: ArticlesRepository,
+    articles_repo: ArticlesRepo,
 ) -> None:
     # create a couple of articles
     article_1 = await articles_repo.create_article(
@@ -178,8 +178,8 @@ async def test_articles_feed(
     expected_titles: list[str],
     test_client: AsyncClient,
     registered_users_with_tokens: list[RegistedUserWithToken],
-    articles_repo: ArticlesRepository,
-    users_repo: UsersRepository,
+    articles_repo: ArticlesRepo,
+    users_repo: UsersRepo,
 ) -> None:
     # follow users
     await users_repo.follow_user(
@@ -230,7 +230,7 @@ async def test_articles_feed(
 async def test_delete_article(
     test_client: AsyncClient,
     author: RegistedUserWithToken,
-    articles_repo: ArticlesRepository,
+    articles_repo: ArticlesRepo,
 ) -> None:
     article = await articles_repo.create_article(
         author_id=author.id,
@@ -254,7 +254,7 @@ async def test_delete_article(
 async def test_update_article(
     test_client: AsyncClient,
     author: RegistedUserWithToken,
-    articles_repo: ArticlesRepository,
+    articles_repo: ArticlesRepo,
 ) -> None:
     article = await articles_repo.create_article(
         author_id=author.id,
@@ -289,7 +289,7 @@ async def test_update_article(
 async def test_favorite_article(
     test_client: AsyncClient,
     registered_users_with_tokens: list[RegistedUserWithToken],
-    articles_repo: ArticlesRepository,
+    articles_repo: ArticlesRepo,
 ) -> None:
     # create an article
     article = await articles_repo.create_article(
@@ -312,7 +312,7 @@ async def test_favorite_article(
 async def test_unfavorite_article(
     test_client: AsyncClient,
     registered_users_with_tokens: list[RegistedUserWithToken],
-    articles_repo: ArticlesRepository,
+    articles_repo: ArticlesRepo,
 ) -> None:
     current_user = registered_users_with_tokens[1]
     # create an article

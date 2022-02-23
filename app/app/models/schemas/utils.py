@@ -12,7 +12,7 @@ def convert_field_to_camel_case(string: str) -> str:
 
 
 def convert_field_to_snake_case(string: str) -> str:
-    return CAMEL_TO_SNAKE_PATTERN.sub('_', string).lower()
+    return CAMEL_TO_SNAKE_PATTERN.sub("_", string).lower()
 
 
 def convert_datetime_to_realworld(dt: datetime) -> str:

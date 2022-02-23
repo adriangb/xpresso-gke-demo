@@ -4,7 +4,7 @@ from uuid import UUID
 
 from xpresso import FromJson, FromPath, HTTPException, status
 
-from app.db.repositories.articles import CommentNotFound, InjectArticlesRepo
+from app.db.repositories.articles import ArticlesRepo, CommentNotFound
 from app.dependencies import OptionalLoggedInUser, RequireLoggedInUser
 from app.models.schemas.comments import (
     CommentForResponse,
@@ -29,7 +29,7 @@ def handle_comment_not_found(comment_id: UUID) -> Iterator[None]:
 async def create_comment(
     current_user: RequireLoggedInUser,
     comment: FromJson[CommentInCreate],
-    repo: InjectArticlesRepo,
+    repo: ArticlesRepo,
     slug: FromPath[UUID],
 ) -> CommentInResponse:
     created_comment = await repo.add_comment_to_article(
@@ -56,7 +56,7 @@ async def create_comment(
 async def delete_comment(
     current_user: RequireLoggedInUser,
     comment_id: FromPath[UUID],
-    repo: InjectArticlesRepo,
+    repo: ArticlesRepo,
     slug: FromPath[UUID],
 ) -> None:
     try:
@@ -74,7 +74,7 @@ async def delete_comment(
 async def get_comments_for_article(
     current_user: OptionalLoggedInUser,
     comment: FromJson[CommentInCreate],
-    repo: InjectArticlesRepo,
+    repo: ArticlesRepo,
     slug: FromPath[UUID],
 ) -> CommentsInResponse:
     comments = await repo.get_comments_for_article(

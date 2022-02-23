@@ -1,6 +1,6 @@
 from xpresso import FromPath, HTTPException, status
 
-from app.db.repositories.users import FolloweeDoesNotExist, InjectUsersRepo
+from app.db.repositories.users import FolloweeDoesNotExist, UsersRepo
 from app.dependencies import RequireLoggedInUser
 from app.models.schemas.profiles import Profile, ProfileInResponse
 
@@ -8,7 +8,7 @@ from app.models.schemas.profiles import Profile, ProfileInResponse
 async def follow_user(
     username: FromPath[str],
     current_user: RequireLoggedInUser,
-    repo: InjectUsersRepo,
+    repo: UsersRepo,
 ) -> ProfileInResponse:
     # make the link
     try:
@@ -34,7 +34,7 @@ async def follow_user(
 async def unfollow_user(
     username: FromPath[str],
     current_user: RequireLoggedInUser,
-    repo: InjectUsersRepo,
+    repo: UsersRepo,
 ) -> ProfileInResponse:
     # unlink in db
     try:

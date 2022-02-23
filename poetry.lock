@@ -197,7 +197,7 @@ toml = ["tomli"]
 
 [[package]]
 name = "di"
-version = "0.58.1"
+version = "0.59.0"
 description = "Autowiring dependency injection"
 category = "main"
 optional = false
@@ -278,7 +278,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "h11"
-version = "0.12.0"
+version = "0.13.0"
 description = "A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"
 category = "main"
 optional = false
@@ -286,21 +286,18 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "httpcore"
-version = "0.14.7"
+version = "0.13.2"
 description = "A minimal low-level HTTP client."
 category = "dev"
 optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
-anyio = ">=3.0.0,<4.0.0"
-certifi = "*"
-h11 = ">=0.11,<0.13"
+h11 = "<1.0.0"
 sniffio = ">=1.0.0,<2.0.0"
 
 [package.extras]
 http2 = ["h2 (>=3,<5)"]
-socks = ["socksio (>=1.0.0,<2.0.0)"]
 
 [[package]]
 name = "httptools"
@@ -315,7 +312,7 @@ test = ["Cython (>=0.29.24,<0.30.0)"]
 
 [[package]]
 name = "httpx"
-version = "0.22.0"
+version = "0.18.1"
 description = "The next generation HTTP client."
 category = "dev"
 optional = false
@@ -323,20 +320,17 @@ python-versions = ">=3.6"
 
 [package.dependencies]
 certifi = "*"
-charset-normalizer = "*"
-httpcore = ">=0.14.5,<0.15.0"
+httpcore = ">=0.13.0,<0.14.0"
 rfc3986 = {version = ">=1.3,<2", extras = ["idna2008"]}
 sniffio = "*"
 
 [package.extras]
-brotli = ["brotlicffi", "brotli"]
-cli = ["click (>=8.0.0,<9.0.0)", "rich (>=10.0.0,<11.0.0)", "pygments (>=2.0.0,<3.0.0)"]
-http2 = ["h2 (>=3,<5)"]
-socks = ["socksio (>=1.0.0,<2.0.0)"]
+brotli = ["brotlicffi (>=1.0.0,<2.0.0)"]
+http2 = ["h2 (>=3.0.0,<4.0.0)"]
 
 [[package]]
 name = "identify"
-version = "2.4.10"
+version = "2.4.11"
 description = "File identification library for Python"
 category = "dev"
 optional = false
@@ -837,7 +831,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "xpresso"
-version = "0.20.2"
+version = "0.21.1"
 description = "A developer centric, performant Python web framework"
 category = "main"
 optional = false
@@ -845,14 +839,14 @@ python-versions = ">=3.7,<4"
 
 [package.dependencies]
 anyio = ">=3,<4"
-di = ">=0.58.1,<0.59.0"
+di = ">=0.59.0,<0.60.0"
 pydantic = ">=1,<2"
 starlette = ">=0.16.0,<1"
 
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "cd22438319438f1a17900ef16545c09663940f5d4befb8e5c2110af23f42ece9"
+content-hash = "7f9ba4553c85b001316d662f665f8e651964b54e17d6125f333b7a884d032c2e"
 
 [metadata.files]
 anyio = [
@@ -1071,8 +1065,8 @@ coverage = [
     {file = "coverage-6.3.2.tar.gz", hash = "sha256:03e2a7826086b91ef345ff18742ee9fc47a6839ccd517061ef8fa1976e652ce9"},
 ]
 di = [
-    {file = "di-0.58.1-py3-none-any.whl", hash = "sha256:ded89b13f7c4e3549e54d33a6943d2a79a339de992b7136438837d0f0ccc2ef6"},
-    {file = "di-0.58.1.tar.gz", hash = "sha256:f31798743fac85bb631283915c4ffbd32a539e2d292f81e270517123d329ecdc"},
+    {file = "di-0.59.0-py3-none-any.whl", hash = "sha256:27a6bded020b473efe12bf6929fc760956a664803f4e31d4cd90273fd7fe14c6"},
+    {file = "di-0.59.0.tar.gz", hash = "sha256:d737abb861535b669c570766d6d2a76bd44038ae4e46f87afb388b66ef3d692e"},
 ]
 distlib = [
     {file = "distlib-0.3.4-py2.py3-none-any.whl", hash = "sha256:6564fe0a8f51e734df6333d08b8b94d4ea8ee6b99b5ed50613f731fd4089f34b"},
@@ -1116,12 +1110,12 @@ graphlib2 = [
     {file = "graphlib2-0.2.16.tar.gz", hash = "sha256:927231758e91ebb94199e47dc6c33e202386b3ac995b9070f4a7d25a1a198161"},
 ]
 h11 = [
-    {file = "h11-0.12.0-py3-none-any.whl", hash = "sha256:36a3cb8c0a032f56e2da7084577878a035d3b61d104230d4bd49c0c6b555a9c6"},
-    {file = "h11-0.12.0.tar.gz", hash = "sha256:47222cb6067e4a307d535814917cd98fd0a57b6788ce715755fa2b6c28b56042"},
+    {file = "h11-0.13.0-py3-none-any.whl", hash = "sha256:8ddd78563b633ca55346c8cd41ec0af27d3c79931828beffb46ce70a379e7442"},
+    {file = "h11-0.13.0.tar.gz", hash = "sha256:70813c1135087a248a4d38cc0e1a0181ffab2188141a93eaf567940c3957ff06"},
 ]
 httpcore = [
-    {file = "httpcore-0.14.7-py3-none-any.whl", hash = "sha256:47d772f754359e56dd9d892d9593b6f9870a37aeb8ba51e9a88b09b3d68cfade"},
-    {file = "httpcore-0.14.7.tar.gz", hash = "sha256:7503ec1c0f559066e7e39bc4003fd2ce023d01cf51793e3c173b864eb456ead1"},
+    {file = "httpcore-0.13.2-py3-none-any.whl", hash = "sha256:52b7d9413f6f5592a667de9209d70d4d41aba3fb0540dd7c93475c78b85941e9"},
+    {file = "httpcore-0.13.2.tar.gz", hash = "sha256:c16efbdf643e1b57bde0adc12c53b08645d7d92d6d345a3f71adfc2a083e7fd2"},
 ]
 httptools = [
     {file = "httptools-0.3.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:4137137de8976511a392e27bfdcf231bd926ac13d375e0414e927b08217d779e"},
@@ -1150,12 +1144,12 @@ httptools = [
     {file = "httptools-0.3.0.tar.gz", hash = "sha256:3f9b4856d46ba1f0c850f4e84b264a9a8b4460acb20e865ec00978ad9fbaa4cf"},
 ]
 httpx = [
-    {file = "httpx-0.22.0-py3-none-any.whl", hash = "sha256:e35e83d1d2b9b2a609ef367cc4c1e66fd80b750348b20cc9e19d1952fc2ca3f6"},
-    {file = "httpx-0.22.0.tar.gz", hash = "sha256:d8e778f76d9bbd46af49e7f062467e3157a5a3d2ae4876a4bbfd8a51ed9c9cb4"},
+    {file = "httpx-0.18.1-py3-none-any.whl", hash = "sha256:ad2e3db847be736edc4b272c4d5788790a7e5789ef132fc6b5fef8aeb9e9f6e0"},
+    {file = "httpx-0.18.1.tar.gz", hash = "sha256:0a2651dd2b9d7662c70d12ada5c290abcf57373b9633515fe4baa9f62566086f"},
 ]
 identify = [
-    {file = "identify-2.4.10-py2.py3-none-any.whl", hash = "sha256:7d10baf6ba6f1912a0a49f4c1c2c49fa1718765c3a37d72d13b07779567c5b85"},
-    {file = "identify-2.4.10.tar.gz", hash = "sha256:e12b2aea3cf108de73ae055c2260783bde6601de09718f6768cf8e9f6f6322a6"},
+    {file = "identify-2.4.11-py2.py3-none-any.whl", hash = "sha256:fd906823ed1db23c7a48f9b176a1d71cb8abede1e21ebe614bac7bdd688d9213"},
+    {file = "identify-2.4.11.tar.gz", hash = "sha256:2986942d3974c8f2e5019a190523b0b0e2a07cb8e89bf236727fb4b26f27f8fd"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
@@ -1500,6 +1494,6 @@ websockets = [
     {file = "websockets-10.2.tar.gz", hash = "sha256:8351c3c86b08156337b0e4ece0e3c5ec3e01fcd14e8950996832a23c99416098"},
 ]
 xpresso = [
-    {file = "xpresso-0.20.2-py3-none-any.whl", hash = "sha256:081461942cb5ef6339fe67f307d01e0e3b71da3abb24becfc871dd4ed6daa06f"},
-    {file = "xpresso-0.20.2.tar.gz", hash = "sha256:3c810a74728acf1c0e564e22b1f796d95de29c63733b4927b7ba0e48b12b20af"},
+    {file = "xpresso-0.21.1-py3-none-any.whl", hash = "sha256:07a7e9bfd2fa6809c4ee50a90db54ff29979b139c11962474f0847a4e0be8862"},
+    {file = "xpresso-0.21.1.tar.gz", hash = "sha256:52abbdfd44d60327c8bf85e0fb740105a7af42296f9c42e214a3fee6260c9296"},
 ]

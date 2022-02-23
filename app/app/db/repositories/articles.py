@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Annotated, Any, Mapping
+from typing import Any, Mapping
 from uuid import UUID
 
 import asyncpg  # type: ignore[import]
 import orjson
-from xpresso import Depends
+from xpresso.dependencies.models import Singleton
 
 from app.db.connection import InjectDBConnectionPool
 
@@ -259,7 +259,7 @@ class CommentNotFound(Exception):
 
 
 @dataclass(frozen=True, slots=True)
-class ArticlesRepository:
+class ArticlesRepo(Singleton):
     pool: InjectDBConnectionPool
 
     async def create_article(  # noqa: WPS211
@@ -481,6 +481,3 @@ class ArticlesRepository:
                 )
                 for comment_record in comment_records
             ]
-
-
-InjectArticlesRepo = Annotated[ArticlesRepository, Depends(scope="app")]

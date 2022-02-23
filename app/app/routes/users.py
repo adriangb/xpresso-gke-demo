@@ -1,16 +1,16 @@
 from xpresso import FromJson
 
-from app.db.repositories.users import InjectUsersRepo
+from app.db.repositories.users import UsersRepo
 from app.dependencies import PasswordHasher
 from app.models.schemas.users import UserInCreate, UserInResponse, UserWithToken
-from app.services.auth import InjectAuthService
+from app.services.auth import AuthService
 
 
 async def create_user(
     user: FromJson[UserInCreate],
-    repo: InjectUsersRepo,
+    repo: UsersRepo,
     hasher: PasswordHasher,
-    auth: InjectAuthService,
+    auth: AuthService,
 ) -> UserInResponse:
     # register the user in the db
     user_id = await repo.create_user(

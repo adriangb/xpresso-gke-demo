@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Mapping
+from typing import Any, Mapping
 from uuid import UUID
 
 import asyncpg  # type: ignore[import]
-from xpresso import Depends
+from xpresso.dependencies.models import Singleton
 
 from app.db.connection import InjectDBConnectionPool
 
@@ -136,8 +136,8 @@ class FolloweeDoesNotExist(Exception):
     pass
 
 
-@dataclass(frozen=True, slots=True, eq=False)
-class UsersRepository:
+@dataclass(slots=True)
+class UsersRepo(Singleton):
     pool: InjectDBConnectionPool
 
     async def get_user_by_email(self, email: str) -> UserInDB | None:
@@ -238,6 +238,3 @@ class UsersRepository:
                 # the user `username_to_unfollow` does not exist in the DB
                 raise FolloweeDoesNotExist from e
             return Profile(**unfollowed_profile)
-
-
-InjectUsersRepo = Annotated[UsersRepository, Depends(scope="app")]

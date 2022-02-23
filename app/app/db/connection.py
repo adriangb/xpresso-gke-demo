@@ -1,8 +1,10 @@
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from typing import Annotated, AsyncGenerator
 
 import asyncpg  # type: ignore[import]
 from xpresso import Depends
+from xpresso.dependencies.models import Singleton
 
 from app.config import DatabaseConfig
 
@@ -37,14 +39,11 @@ async def get_connection(
 InjectDBConnection = Annotated[asyncpg.Connection, Depends(get_connection)]
 
 
-class ConnectionHealth:
-    def __init__(self, pool: InjectDBConnectionPool) -> None:
-        self.pool = pool
+@dataclass(slots=True)
+class ConnectionHealth(Singleton):
+    pool: InjectDBConnectionPool
 
     async def is_connected(self) -> bool:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore
             return await conn.fetchval("SELECT 1") == 1  # type: ignore
-
-
-InjectConnectionHealth = Annotated[ConnectionHealth, Depends(scope="app")]

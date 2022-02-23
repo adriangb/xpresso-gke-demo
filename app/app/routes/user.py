@@ -1,6 +1,6 @@
 from xpresso import FromJson
 
-from app.db.repositories.users import InjectUsersRepo
+from app.db.repositories.users import UsersRepo
 from app.dependencies import PasswordHasher, RequireLoggedInUser
 from app.models.schemas.users import UserInResponse, UserInUpdate, UserWithToken
 
@@ -21,7 +21,7 @@ async def get_user(current_user: RequireLoggedInUser) -> UserInResponse:
 async def update_user(
     updated_user_info: FromJson[UserInUpdate],
     current_user: RequireLoggedInUser,
-    repo: InjectUsersRepo,
+    repo: UsersRepo,
     hasher: PasswordHasher,
 ) -> UserInResponse:
     user_info = updated_user_info.user

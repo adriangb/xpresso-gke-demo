@@ -1,9 +1,10 @@
 from datetime import datetime
+
 from pydantic import BaseConfig
 
 from app.models.schemas.utils import (
-    convert_field_to_camel_case,
     convert_datetime_to_realworld,
+    convert_field_to_camel_case,
     convert_field_to_snake_case,
 )
 

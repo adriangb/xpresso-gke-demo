@@ -1,13 +1,14 @@
 from typing import Literal
 
-from pydantic import BaseSettings, SecretStr
+from pydantic import SecretStr
+from xpresso.config import Config
 
 
-class AuthConfig(BaseSettings):
+class AuthConfig(Config):
     token_signing_key: SecretStr
 
 
-class DatabaseConfig(BaseSettings):
+class DatabaseConfig(Config):
     db_username: str
     db_password: SecretStr | None = None
     db_host: str
@@ -15,7 +16,7 @@ class DatabaseConfig(BaseSettings):
     db_database_name: str
 
 
-class AppConfig(BaseSettings):
+class AppConfig(Config):
     app_port: int
     app_host: str
     log_level: Literal["DEBUG", "INFO"]

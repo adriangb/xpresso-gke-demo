@@ -10,8 +10,8 @@ from tests.hasher import password_hasher
 
 
 @pytest.fixture
-async def users_repo(app_db_pool: asyncpg.Pool) -> users.UsersRepository:
-    return users.UsersRepository(app_db_pool)
+async def users_repo(app_db_pool: asyncpg.Pool) -> users.UsersRepo:
+    return users.UsersRepo(app_db_pool)
 
 
 @dataclass
@@ -36,7 +36,7 @@ REGISTERED_USERS_INFO = [
 
 
 @pytest.fixture
-async def registered_users(users_repo: users.UsersRepository) -> list[RegisterdUser]:
+async def registered_users(users_repo: users.UsersRepo) -> list[RegisterdUser]:
     res: list[RegisterdUser] = []
     for user_info in REGISTERED_USERS_INFO:
         password = user_info.username + user_info.email
@@ -66,5 +66,5 @@ async def registered_users(users_repo: users.UsersRepository) -> list[RegisterdU
 
 
 @pytest.fixture
-async def articles_repo(app_db_pool: asyncpg.Pool) -> articles.ArticlesRepository:
-    return articles.ArticlesRepository(app_db_pool)
+async def articles_repo(app_db_pool: asyncpg.Pool) -> articles.ArticlesRepo:
+    return articles.ArticlesRepo(app_db_pool)

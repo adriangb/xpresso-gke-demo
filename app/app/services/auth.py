@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Annotated, Protocol
+from typing import Protocol
 from uuid import UUID
 
 import jwt
 from argon2 import PasswordHasher
 from pydantic import ValidationError
-from xpresso import Depends
+from xpresso.dependencies.models import Singleton
 
 from app.config import AuthConfig
 from app.models.schemas.jwt import JWTUser, Token
@@ -25,8 +25,8 @@ class Now(Protocol):
 
 
 @dataclass(slots=True)
-class AuthService:
-    config: Annotated[AuthConfig, Depends(lambda: AuthConfig(), scope="app")]  # type: ignore # BaseSettings are not directly injectable
+class AuthService(Singleton):
+    config: AuthConfig
     expiration_timedelta: timedelta = timedelta(weeks=1)
     now: Now = datetime.utcnow
     hasher: PasswordHasher = PasswordHasher()
@@ -53,6 +53,3 @@ class AuthService:
             raise InvalidTokenError("Unable to decode JWT token") from decode_error
         except ValidationError as validation_error:
             raise InvalidTokenError("Malformed payload in token") from validation_error
-
-
-InjectAuthService = Annotated[AuthService, Depends(scope="app")]

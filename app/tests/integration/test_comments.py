@@ -5,7 +5,7 @@ import pytest
 from httpx import AsyncClient, Response
 from pydantic import BaseModel
 
-from app.db.repositories.articles import ArticlesRepository
+from app.db.repositories.articles import ArticlesRepo
 from tests.integration.conftest import RegistedUserWithToken
 
 
@@ -33,7 +33,7 @@ class ResponseCommentValidator(BaseModel):
 
 async def test_create_comment(
     test_client: AsyncClient,
-    articles_repo: ArticlesRepository,
+    articles_repo: ArticlesRepo,
     author: RegistedUserWithToken,
 ) -> None:
     article = await articles_repo.create_article(
