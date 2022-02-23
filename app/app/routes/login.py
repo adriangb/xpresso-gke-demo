@@ -1,17 +1,16 @@
 from argon2.exceptions import VerificationError
-from xpresso import HTTPException, status
+from xpresso import FromJson, HTTPException, status
 
-from app.db.repositories.users import UsersRepository
+from app.db.repositories.users import InjectUsersRepo
 from app.dependencies import PasswordHasher
 from app.models.schemas.users import UserInLogin, UserInResponse, UserWithToken
-from app.requests import OrJSON
-from app.services.auth import AuthService
+from app.services.auth import InjectAuthService
 
 
 async def login(
-    user: OrJSON[UserInLogin],
-    auth_service: AuthService,
-    repo: UsersRepository,
+    user: FromJson[UserInLogin],
+    auth_service: InjectAuthService,
+    repo: InjectUsersRepo,
     hasher: PasswordHasher,
 ) -> UserInResponse:
     user_info = user.user

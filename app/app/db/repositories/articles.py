@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Mapping
+from typing import Annotated, Any, Mapping
 from uuid import UUID
 
 import asyncpg  # type: ignore[import]
 import orjson
+from xpresso import Depends
 
 from app.db.connection import InjectDBConnectionPool
 
@@ -137,7 +138,7 @@ WHERE (
     AND
     ($4::text IS NULL OR id IN (SELECT id FROM articles_favorited_by_filter_user))
 )
-ORDER BY created_at ASC
+ORDER BY created_at DESC
 LIMIT $5
 OFFSET $6
 """
@@ -150,7 +151,7 @@ SELECT
 {_ARTICLE_FIELDS}
 FROM articles
 INNER JOIN followers_to_followings ON (follower_id = $1 AND following_id = articles.author_id)
-ORDER BY created_at ASC
+ORDER BY created_at DESC
 LIMIT $2
 OFFSET $3
 """
@@ -480,3 +481,6 @@ class ArticlesRepository:
                 )
                 for comment_record in comment_records
             ]
+
+
+InjectArticlesRepo = Annotated[ArticlesRepository, Depends(scope="app")]

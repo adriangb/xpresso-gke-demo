@@ -96,17 +96,17 @@ async def test_list_articles(
     "params,expected_titles",
     [
         # by tags
-        ({}, ["1", "2", "3"]),
+        ({}, ["3", "2", "1"]),
         ({"tag": "tag1"}, ["1"]),
-        ({"tag": "tag2"}, ["1", "2"]),
+        ({"tag": "tag2"}, ["2", "1"]),
         # by author
-        ({"author": REGISTERED_USERS_INFO[0].username}, ["1", "2"]),
+        ({"author": REGISTERED_USERS_INFO[0].username}, ["2", "1"]),
         ({"author": REGISTERED_USERS_INFO[1].username}, ["3"]),
         ({"author": REGISTERED_USERS_INFO[2].username}, []),
         # by favorited
         ({"favorited": REGISTERED_USERS_INFO[0].username}, ["3"]),
         ({"favorited": REGISTERED_USERS_INFO[1].username}, ["2"]),
-        ({"favorited": REGISTERED_USERS_INFO[2].username}, ["1", "3"]),
+        ({"favorited": REGISTERED_USERS_INFO[2].username}, ["3", "1"]),
     ],
 )
 async def test_list_articles_filter(
@@ -169,8 +169,8 @@ async def test_list_articles_filter(
     "current_user_idx,expected_titles",
     [
         (0, []),
-        (1, ["1", "2"]),
-        (2, ["1", "2", "3"]),
+        (1, ["2", "1"]),
+        (2, ["3", "2", "1"]),
     ],
 )
 async def test_articles_feed(

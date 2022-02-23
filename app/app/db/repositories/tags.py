@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from typing import Annotated
 
 import asyncpg  # type: ignore[import]
+from xpresso import Depends
 
 from app.db.connection import InjectDBConnectionPool
 
@@ -15,3 +17,6 @@ class TagsRepository:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore # For Pylance
             return await conn.fetchval(GET_ALL_TAGS)  # type: ignore # For Pylance
+
+
+InjectTagsRepo = Annotated[TagsRepository, Depends(scope="app")]

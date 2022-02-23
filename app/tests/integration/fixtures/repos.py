@@ -5,7 +5,7 @@ import asyncpg  # type: ignore[import]
 import pytest
 
 from app.db.repositories import articles, users
-from app.models.domain.users import User
+from app.models.schemas.users import User
 from tests.hasher import password_hasher
 
 

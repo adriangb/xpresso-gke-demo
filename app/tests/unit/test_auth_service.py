@@ -3,6 +3,7 @@ from uuid import UUID
 
 import pytest
 
+from app.config import AuthConfig
 from app.models.schemas.jwt import Token
 from app.services.auth import AuthService, InvalidTokenError
 
@@ -12,7 +13,7 @@ def test_auth_service_create_token() -> None:
     fixed_datetime = datetime(2022, 2, 18, tzinfo=timezone.utc)
     exptected_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlN2QwNDcwYy00NmE5LTQ0YWEtOGU3ZS00MmVlZjhkMTIyMmUiLCJleHAiOjE2NDU3NDcyMDAuMH0.C7_eweY0IhWhgo3ixS0-HCZZF8r36-W0hdEaKnCRZIk"
 
-    service = AuthService(secret_key="foobarbaz", now=lambda: fixed_datetime)
+    service = AuthService(AuthConfig(token_signing_key="foobarbaz"), now=lambda: fixed_datetime)  # type: ignore  # for Pylance
     created_token = service.create_access_token(user_id=user_id)
 
     assert created_token == exptected_token
@@ -23,7 +24,7 @@ def test_auth_service_get_id_from_token() -> None:
     # this token has an exp in 3021
     token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlN2QwNDcwYy00NmE5LTQ0YWEtOGU3ZS00MmVlZjhkMTIyMmUiLCJleHAiOjMzMTgxMDA4OTU2LjQzNzk5Mn0.YToq_m0fj2TNRQogFP7RAIb8dQfBQifRt4wLj-A9cZ0"
 
-    service = AuthService(secret_key="foobarbaz")
+    service = AuthService(AuthConfig(token_signing_key="foobarbaz"))  # type: ignore  # for Pylance
     got_user_id = service.verify_access_token_and_extract_user_id(Token(token))
 
     assert got_user_id == expected_user_id
@@ -41,5 +42,5 @@ def test_auth_service_get_id_from_token() -> None:
 )
 def test_invalid_token(token: str) -> None:
     with pytest.raises(InvalidTokenError):
-        service = AuthService(secret_key="foobarbaz")
+        service = AuthService(AuthConfig(token_signing_key="foobarbaz"))  # type: ignore  # for Pylance
         service.verify_access_token_and_extract_user_id(Token(token))

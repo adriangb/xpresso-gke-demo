@@ -1,13 +1,12 @@
 from dataclasses import asdict, dataclass
-from functools import partial
 from typing import Annotated
 
-from xpresso import Depends, FromHeader, HTTPException, status
+from xpresso import Depends, HTTPException, status
 
-from app.db.repositories.users import UserInDB, UsersRepository
+from app.db.repositories.users import InjectUsersRepo, UserInDB
 from app.models.schemas.auth import Unauthorized
 from app.models.schemas.jwt import Token
-from app.services.auth import AuthService
+from app.services.auth import InjectAuthService
 
 UNAUTHORIZED = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED, detail={"Invalid authentication"}
@@ -32,31 +31,21 @@ class LoggedInUser(UserInDB):
     token: Token
 
 
-async def get_current_user(
-    auth_service: AuthService,
-    users_repo: UsersRepository,
-    required: bool,
-    authorization: FromHeader[str | None] = None,
-) -> LoggedInUser | None:
-    if not authorization:
-        if required:
-            raise UNAUTHORIZED
-        else:
-            return None
-    token = extract_token_from_authroization_header(authorization)
-    user_id = auth_service.verify_access_token_and_extract_user_id(token)
-    maybe_user_in_db = await users_repo.get_user_by_id(id=user_id)
-    if maybe_user_in_db is None and required:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=Unauthorized.construct(reason="Invalid credentials"),
-        )
-    return LoggedInUser(**asdict(maybe_user_in_db), token=token)
+@dataclass(slots=True)
+class UsersService:
+    auth_service: InjectAuthService
+    users_repo: InjectUsersRepo
+
+    async def get_current_user(self, authorization: str) -> LoggedInUser:
+        token = extract_token_from_authroization_header(authorization)
+        user_id = self.auth_service.verify_access_token_and_extract_user_id(token)
+        maybe_user_in_db = await self.users_repo.get_user_by_id(id=user_id)
+        if maybe_user_in_db is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=Unauthorized.construct(reason="Invalid credentials"),
+            )
+        return LoggedInUser(**asdict(maybe_user_in_db), token=token)
 
 
-RequireLoggedInUser = Annotated[
-    LoggedInUser, Depends(partial(get_current_user, required=True))
-]
-OptionalLoggedInUser = Annotated[
-    LoggedInUser | None, Depends(partial(get_current_user, required=False))
-]
+InjectUsersService = Annotated[UsersService, Depends(scope="app")]

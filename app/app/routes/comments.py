@@ -2,9 +2,10 @@ from contextlib import contextmanager
 from typing import Iterator
 from uuid import UUID
 
-from xpresso import FromPath, HTTPException, status
+from xpresso import FromJson, FromPath, HTTPException, status
 
-from app.db.repositories.articles import ArticlesRepository, CommentNotFound
+from app.db.repositories.articles import CommentNotFound, InjectArticlesRepo
+from app.dependencies import OptionalLoggedInUser, RequireLoggedInUser
 from app.models.schemas.comments import (
     CommentForResponse,
     CommentInCreate,
@@ -12,8 +13,6 @@ from app.models.schemas.comments import (
     CommentsInResponse,
 )
 from app.models.schemas.profiles import Profile
-from app.requests import OrJSON
-from app.services.user import OptionalLoggedInUser, RequireLoggedInUser
 
 
 @contextmanager
@@ -29,8 +28,8 @@ def handle_comment_not_found(comment_id: UUID) -> Iterator[None]:
 
 async def create_comment(
     current_user: RequireLoggedInUser,
-    comment: OrJSON[CommentInCreate],
-    repo: ArticlesRepository,
+    comment: FromJson[CommentInCreate],
+    repo: InjectArticlesRepo,
     slug: FromPath[UUID],
 ) -> CommentInResponse:
     created_comment = await repo.add_comment_to_article(
@@ -57,7 +56,7 @@ async def create_comment(
 async def delete_comment(
     current_user: RequireLoggedInUser,
     comment_id: FromPath[UUID],
-    repo: ArticlesRepository,
+    repo: InjectArticlesRepo,
     slug: FromPath[UUID],
 ) -> None:
     try:
@@ -74,8 +73,8 @@ async def delete_comment(
 
 async def get_comments_for_article(
     current_user: OptionalLoggedInUser,
-    comment: OrJSON[CommentInCreate],
-    repo: ArticlesRepository,
+    comment: FromJson[CommentInCreate],
+    repo: InjectArticlesRepo,
     slug: FromPath[UUID],
 ) -> CommentsInResponse:
     comments = await repo.get_comments_for_article(

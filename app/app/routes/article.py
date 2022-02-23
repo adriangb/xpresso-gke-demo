@@ -2,9 +2,10 @@ from contextlib import contextmanager
 from typing import Iterator
 from uuid import UUID
 
-from xpresso import FromPath, HTTPException, status
+from xpresso import FromJson, FromPath, HTTPException, status
 
-from app.db.repositories.articles import ArticleNotFound, ArticlesRepository
+from app.db.repositories.articles import ArticleNotFound, InjectArticlesRepo
+from app.dependencies import OptionalLoggedInUser, RequireLoggedInUser
 from app.models.conversions import convert_article_in_db_to_article_in_response
 from app.models.schemas.articles import (
     Article,
@@ -13,8 +14,6 @@ from app.models.schemas.articles import (
     ArticleInUpdate,
 )
 from app.models.schemas.profiles import Profile
-from app.requests import OrJSON
-from app.services.user import OptionalLoggedInUser, RequireLoggedInUser
 
 
 @contextmanager
@@ -29,8 +28,8 @@ def handle_article_not_found(slug: UUID) -> Iterator[None]:
 
 async def create_article(
     current_user: RequireLoggedInUser,
-    article: OrJSON[ArticleInCreate],
-    articles_repo: ArticlesRepository,
+    article: FromJson[ArticleInCreate],
+    articles_repo: InjectArticlesRepo,
 ) -> ArticleInResponse:
     # verify the author's idenetity
     # publish the article
@@ -66,7 +65,7 @@ async def create_article(
 
 
 async def delete_article(
-    articles_repo: ArticlesRepository,
+    articles_repo: InjectArticlesRepo,
     current_user: RequireLoggedInUser,
     slug: FromPath[UUID],
 ) -> None:
@@ -78,10 +77,10 @@ async def delete_article(
 
 
 async def update_article(
-    articles_repo: ArticlesRepository,
+    articles_repo: InjectArticlesRepo,
     current_user: RequireLoggedInUser,
     slug: FromPath[UUID],
-    article_info: OrJSON[ArticleInUpdate],
+    article_info: FromJson[ArticleInUpdate],
 ) -> ArticleInResponse:
     with handle_article_not_found(slug):
         article = await articles_repo.update_article(
@@ -95,7 +94,7 @@ async def update_article(
 
 
 async def get_article(
-    articles_repo: ArticlesRepository,
+    articles_repo: InjectArticlesRepo,
     slug: FromPath[UUID],
     current_user: OptionalLoggedInUser = None,
 ) -> ArticleInResponse:
@@ -108,7 +107,7 @@ async def get_article(
 
 
 async def favorite_article(
-    articles_repo: ArticlesRepository,
+    articles_repo: InjectArticlesRepo,
     slug: FromPath[UUID],
     current_user: RequireLoggedInUser,
 ) -> ArticleInResponse:
@@ -121,7 +120,7 @@ async def favorite_article(
 
 
 async def unfavorite_article(
-    articles_repo: ArticlesRepository,
+    articles_repo: InjectArticlesRepo,
     slug: FromPath[UUID],
     current_user: RequireLoggedInUser,
 ) -> ArticleInResponse:

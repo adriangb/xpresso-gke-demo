@@ -1,14 +1,14 @@
 from xpresso import FromPath, HTTPException, status
 
-from app.db.repositories.users import FolloweeDoesNotExist, UsersRepository
+from app.db.repositories.users import FolloweeDoesNotExist, InjectUsersRepo
+from app.dependencies import RequireLoggedInUser
 from app.models.schemas.profiles import Profile, ProfileInResponse
-from app.services.user import RequireLoggedInUser
 
 
 async def get_profile(
     username: FromPath[str],
     current_user: RequireLoggedInUser,
-    repo: UsersRepository,
+    repo: InjectUsersRepo,
 ) -> ProfileInResponse:
     try:
         profile = await repo.get_profile(

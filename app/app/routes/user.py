@@ -1,8 +1,8 @@
-from app.db.repositories.users import UsersRepository
-from app.dependencies import PasswordHasher
+from xpresso import FromJson
+
+from app.db.repositories.users import InjectUsersRepo
+from app.dependencies import PasswordHasher, RequireLoggedInUser
 from app.models.schemas.users import UserInResponse, UserInUpdate, UserWithToken
-from app.requests import OrJSON
-from app.services.user import RequireLoggedInUser
 
 
 async def get_user(current_user: RequireLoggedInUser) -> UserInResponse:
@@ -19,9 +19,9 @@ async def get_user(current_user: RequireLoggedInUser) -> UserInResponse:
 
 
 async def update_user(
-    updated_user_info: OrJSON[UserInUpdate],
+    updated_user_info: FromJson[UserInUpdate],
     current_user: RequireLoggedInUser,
-    repo: UsersRepository,
+    repo: InjectUsersRepo,
     hasher: PasswordHasher,
 ) -> UserInResponse:
     user_info = updated_user_info.user

@@ -24,13 +24,7 @@ async def get_pool(config: DatabaseConfig) -> AsyncGenerator[asyncpg.Pool, None]
         yield pool
 
 
-def _missing_pool() -> None:
-    raise RuntimeError(
-        "The asyncpg connection pool should be bound at application startup"
-    )
-
-
-InjectDBConnectionPool = Annotated[asyncpg.Pool, Depends(_missing_pool)]
+InjectDBConnectionPool = Annotated[asyncpg.Pool, Depends(scope="app")]
 
 
 async def get_connection(
@@ -51,3 +45,6 @@ class ConnectionHealth:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore
             return await conn.fetchval("SELECT 1") == 1  # type: ignore
+
+
+InjectConnectionHealth = Annotated[ConnectionHealth, Depends(scope="app")]

@@ -9,7 +9,6 @@ from app.db.connection import get_pool
 from app.db.migrations import run as migrations
 from app.logconfig import get_json_logconfig
 from app.routes import routes
-from app.services.auth import AuthService
 
 app = App(routes=routes)
 
@@ -18,21 +17,20 @@ async def main() -> None:
     # load configs from the environment
     app_config = AppConfig()  # type: ignore  # values are loaded from env vars
     db_config = DatabaseConfig()  # type: ignore  # values are loaded from env vars
-    # set up services
-    auth_service = AuthService(
-        secret_key=app_config.token_signing_secret_key.get_secret_value()
-    )
-    app.dependency_overrides[AuthService] = lambda: auth_service
+
     # set up JSON logging
     log_config = get_json_logconfig(app_config.log_level)
+
     # get a database pool for the lifetime of the app
     async with get_pool(db_config) as pool:
         # run migrations
         conn: asyncpg.Connection
         async with pool.acquire() as conn:
             await migrations.run(conn)
+
         # bind that pool to the DI container
         app.dependency_overrides[asyncpg.Pool] = lambda: pool
+
         # start the server
         server_config = uvicorn.Config(
             app,
