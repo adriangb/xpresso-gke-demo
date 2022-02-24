@@ -30,7 +30,13 @@ repos:
         name: Export app dependencies to app/requirements.txt
         language: system
         entry: poetry export -f requirements.txt --output app/requirements.txt
-        files: ^pyproject.toml|poetry.lock$
+        files: ^pyproject.toml|poetry.lock|app/requirements.txt$
+        pass_filenames: false
+      - id: requirements-dev.txt
+        name: Export app dependencies to app/requirements.txt
+        language: system
+        entry: poetry export -f requirements.txt --dev --output app/requirements-dev.txt
+        files: ^pyproject.toml|poetry.lock|app/requirements-dev.txt$
         pass_filenames: false
       - id: isort
         name: Run isort on app source code

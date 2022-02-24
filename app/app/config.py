@@ -10,7 +10,7 @@ class AuthConfig(Config):
 
 class DatabaseConfig(Config):
     db_username: str
-    db_password: SecretStr | None = None
+    db_password: SecretStr | None
     db_host: str
     db_port: int
     db_database_name: str
