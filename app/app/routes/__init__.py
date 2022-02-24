@@ -6,7 +6,6 @@ from app.routes import (
     article,
     articles,
     comments,
-    follow,
     health,
     login,
     profile,
@@ -30,11 +29,11 @@ api_routes = [
     Path("/users/login", post=Operation(login.login, **orjson_response())),
     Path(
         "/profiles/{username}/follow",
-        post=Operation(follow.follow_user, **orjson_response()),
+        post=Operation(profile.follow_user, **orjson_response()),
     ),
     Path(
         "/profiles/{username}/unfollow",
-        post=Operation(follow.unfollow_user, **orjson_response()),
+        post=Operation(profile.unfollow_user, **orjson_response()),
     ),
     Path(
         "/profiles/{username}",

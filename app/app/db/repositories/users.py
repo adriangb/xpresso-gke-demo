@@ -148,14 +148,6 @@ class UsersRepo(Singleton):
             return UserInDB(**user_row)
         return None
 
-    async def get_user_by_username(self, username: str) -> UserInDB | None:
-        conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            user_row: Record | None = await conn.fetchrow(GET_USER_BY_NAME, username)  # type: ignore  # for Pylance
-        if user_row:
-            return UserInDB(**user_row)
-        return None
-
     async def get_user_by_id(self, id: UUID) -> UserInDB | None:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
