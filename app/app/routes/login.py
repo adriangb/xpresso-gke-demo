@@ -1,6 +1,7 @@
 from argon2.exceptions import VerificationError
 from xpresso import FromJson, HTTPException, status
 
+from app.db.repositories.exceptions import ResourceDoesNotExistError
 from app.db.repositories.users import UsersRepo
 from app.dependencies import PasswordHasher
 from app.models.schemas.users import UserInLogin, UserInResponse, UserWithToken
@@ -15,8 +16,9 @@ async def login(
 ) -> UserInResponse:
     user_info = user.user
     # check that the user exists in the database
-    maybe_user_in_db = await repo.get_user_by_email(email=user_info.email)
-    if maybe_user_in_db is None:
+    try:
+        maybe_user_in_db = await repo.find_user_by_email(email=user_info.email)
+    except ResourceDoesNotExistError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"reason": "Invalid credentials"},
@@ -33,7 +35,7 @@ async def login(
     if hasher.check_needs_rehash(maybe_user_in_db.hashed_password):
         hashed_password = hasher.hash(user_info.password)
         await repo.update_user(
-            id_of_current_user=maybe_user_in_db.id, hashed_password=hashed_password
+            current_user_id=maybe_user_in_db.id, hashed_password=hashed_password
         )
     # create a jwt token
     token = auth_service.create_access_token(user_id=maybe_user_in_db.id)

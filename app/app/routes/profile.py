@@ -1,20 +1,22 @@
 from xpresso import FromPath, HTTPException, status
 
-from app.db.repositories.users import FolloweeDoesNotExist, UsersRepo
-from app.dependencies import RequireLoggedInUser
+from app.db.repositories.exceptions import ResourceDoesNotExistError
+from app.db.repositories.profiles import ProfilesRepo
+from app.dependencies import OptionalLoggedInUser, RequireLoggedInUser
 from app.models.schemas.profiles import Profile, ProfileInResponse
 
 
 async def get_profile(
     username: FromPath[str],
-    current_user: RequireLoggedInUser,
-    repo: UsersRepo,
+    current_user: OptionalLoggedInUser | None,
+    repo: ProfilesRepo,
 ) -> ProfileInResponse:
     try:
         profile = await repo.get_profile(
-            username_of_target_profile=username, id_of_current_user=current_user.id
+            current_user_id=None if current_user is None else current_user.id,
+            username_of_target_profile=username,
         )
-    except FolloweeDoesNotExist as exc:
+    except ResourceDoesNotExistError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"reason": f"No user found with username {username}"},
@@ -25,7 +27,7 @@ async def get_profile(
             username=profile.username,
             bio=profile.bio,
             image=profile.image,
-            following=profile.follows,
+            following=profile.following,
         )
     )
 
@@ -33,19 +35,18 @@ async def get_profile(
 async def follow_user(
     username: FromPath[str],
     current_user: RequireLoggedInUser,
-    repo: UsersRepo,
+    repo: ProfilesRepo,
 ) -> ProfileInResponse:
-    # make the link
     try:
         followed_profile = await repo.follow_user(
-            username_to_follow=username, id_of_current_user=current_user.id
+            current_user_id=current_user.id,
+            username_to_follow=username,
         )
-    except FolloweeDoesNotExist:
+    except ResourceDoesNotExistError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"reason": f"No user found with username {username}"},
         )
-    # build and return the profile
     return ProfileInResponse.construct(
         profile=Profile.construct(
             username=followed_profile.username,
@@ -59,25 +60,23 @@ async def follow_user(
 async def unfollow_user(
     username: FromPath[str],
     current_user: RequireLoggedInUser,
-    repo: UsersRepo,
+    repo: ProfilesRepo,
 ) -> ProfileInResponse:
-    # unlink in db
     try:
         followed_profile = await repo.unfollow_user(
+            current_user_id=current_user.id,
             username_to_unfollow=username,
-            id_of_current_user=current_user.id,
         )
-    except FolloweeDoesNotExist:
+    except ResourceDoesNotExistError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"reason": f"No user found with username {username}"},
         )
-    # build and return the profile
     return ProfileInResponse.construct(
         profile=Profile.construct(
             username=followed_profile.username,
             bio=followed_profile.bio,
             image=followed_profile.image,
-            following=False,
+            following=True,
         )
     )

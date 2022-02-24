@@ -1,11 +1,13 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 import asyncpg  # type: ignore[import]
 from xpresso.dependencies.models import Singleton
 
 from app.db.connection import InjectDBConnectionPool
 
-GET_ALL_TAGS = """select array(select tag_name from tags);"""
+QUERY_DIR = Path(__file__).parent / "sql" / "tags"
+GET_ALL_TAGS = open(QUERY_DIR / "get_all_tags.sql").read()
 
 
 @dataclass(slots=True)

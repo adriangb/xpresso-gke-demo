@@ -3,6 +3,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from app.models.domain.articles import Article as ArticleDomainModel
 from app.models.schemas.configs import ModelInRequestConfig, ModelInResponseConfig
 from app.models.schemas.profiles import Profile
 
@@ -23,6 +24,26 @@ class Article(BaseModel):
     updated_at: datetime
 
     Config = ModelInResponseConfig
+
+    @staticmethod
+    def from_domain_model(article: ArticleDomainModel) -> "Article":
+        return Article.construct(
+            slug=str(article.id),
+            title=article.title,
+            description=article.description,
+            body=article.body,
+            tags=article.tags,
+            author=Profile.construct(
+                username=article.author.username,
+                bio=article.author.bio,
+                image=article.author.image,
+                following=article.author.following,
+            ),
+            created_at=article.created_at,
+            updated_at=article.updated_at,
+            favorites_count=article.favorites_count,
+            favorited=article.favorited,
+        )
 
 
 class ArticleInResponse(BaseModel):

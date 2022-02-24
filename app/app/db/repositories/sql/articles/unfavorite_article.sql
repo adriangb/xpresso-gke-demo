@@ -26,7 +26,7 @@ SELECT
             'username', username,
             'bio', bio,
             'image', image,
-            'following', EXISTS(SELECT 1 FROM followers_to_followings WHERE follower_id = $1 AND following_id = author_id)
+            'following', EXISTS(SELECT * FROM followers_to_followings WHERE follower_id = $1 AND following_id = author_id)
         )
         FROM users
         WHERE id = author_id

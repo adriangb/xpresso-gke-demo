@@ -6,6 +6,7 @@ from app.routes import (
     article,
     articles,
     comments,
+    feed,
     health,
     login,
     profile,
@@ -49,7 +50,7 @@ api_routes = [
     ),
     Path(
         "/articles/feed",
-        get=Operation(articles.get_user_feed, **orjson_response()),
+        get=Operation(feed.get_user_feed, **orjson_response()),
     ),
     Path(
         "/articles/{slug}",

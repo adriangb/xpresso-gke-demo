@@ -8,6 +8,10 @@ import orjson
 from xpresso.dependencies.models import Singleton
 
 from app.db.connection import InjectDBConnectionPool
+from app.db.repositories.exceptions import (
+    ResourceDoesNotExistError,
+    UserIsNotAuthorizedError,
+)
 from app.models.domain.articles import Article
 from app.models.domain.comments import Comment
 from app.models.domain.profiles import Profile
@@ -15,45 +19,37 @@ from app.models.domain.profiles import Profile
 Record = Mapping[str, Any]
 
 
-class ArticleNotFoundError(Exception):
-    pass
-
-class UserDoesNotOwnResourceError(Exception):
-    pass
-
-
 QUERY_DIR = Path(__file__).parent / "sql" / "articles"
-CREATE = open(QUERY_DIR / "create.sql").read()
+CREATE_ARTICLE = open(QUERY_DIR / "create_article.sql").read()
 ADD_COMMENT = open(QUERY_DIR / "add_comment.sql").read()
-DELETE_COMMENT = open(QUERY_DIR / "delete_comment.sql").read()
-DELETE = open(QUERY_DIR / "delete.sql").read()
-FAVORITE = open(QUERY_DIR / "favorite.sql").read()
-UNFAVORITE = open(QUERY_DIR / "unfavorite.sql").read()
-GET = open(QUERY_DIR / "get.sql").read()
-SEARCH = open(QUERY_DIR / "search.sql").read()
-UPDATE = open(QUERY_DIR / "update.sql").read()
+DELETE_ARTICLE = open(QUERY_DIR / "delete_article.sql").read()
+FAVORITE_ARTICLE = open(QUERY_DIR / "favorite_article.sql").read()
+UNFAVORITE_ARTICLE = open(QUERY_DIR / "unfavorite_article.sql").read()
+GET_ARTICLE = open(QUERY_DIR / "get_article.sql").read()
+SEARCH_ARTICLES = open(QUERY_DIR / "search_articles.sql").read()
+UPDATE_ARTICLE = open(QUERY_DIR / "update_article.sql").read()
 
 
 def _article_from_record(record: Record) -> Article:
     return Article(
-            id=record["id"],
-            title=record["title"],
-            description=record["description"],
-            body=record["body"],
-            author=Profile(**orjson.loads(record["author"])),
-            created_at=record["created_at"],
-            updated_at=record["updated_at"],
-            favorited=record["favorited"],
-            favorites_count=record["favorites_count"],
-            tags=record["tags"],
-        )
+        id=record["id"],
+        title=record["title"],
+        description=record["description"],
+        body=record["body"],
+        author=Profile(**orjson.loads(record["author"])),
+        created_at=record["created_at"],
+        updated_at=record["updated_at"],
+        favorited=record["favorited"],
+        favorites_count=record["favorites_count"],
+        tags=record["tags"],
+    )
 
 
 @dataclass(slots=True)
 class ArticlesRepo(Singleton):
     pool: InjectDBConnectionPool
 
-    async def create_article(  # noqa: WPS211
+    async def create_article(
         self,
         *,
         author_id: UUID,
@@ -65,18 +61,25 @@ class ArticlesRepo(Singleton):
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             article_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
-                CREATE,
+                CREATE_ARTICLE,
                 author_id,
                 title,
                 description,
                 body,
+                tags or [],
             )
-            if tags:
-                article_id = article_record["id"]
-                records = [(article_id, tag) for tag in tags]
-                await conn.executemany(LINK_TAGS_TO_ARTICLE, records)  # type: ignore  # for Pylance
 
-        return _article_from_record(article_record)
+        return _article_from_record(
+            {
+                **article_record,
+                "title": title,
+                "description": description,
+                "body": body,
+                "tags": tags,
+                "favorited": False,
+                "favorites_count": 0,
+            }
+        )
 
     async def get_article_by_id(
         self,
@@ -87,13 +90,13 @@ class ArticlesRepo(Singleton):
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             article_record: Record | None = await conn.fetchrow(  # type: ignore  # for Pylance
-                GET,
+                GET_ARTICLE,
                 current_user_id,
                 article_id,
             )
         if article_record:
             return _article_from_record(article_record)
-        raise ArticleNotFoundError
+        raise ResourceDoesNotExistError
 
     async def list_articles(
         self,
@@ -108,7 +111,7 @@ class ArticlesRepo(Singleton):
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             article_records: list[Record] = await conn.fetch(  # type: ignore  # for Pylance
-                SEARCH,
+                SEARCH_ARTICLES,
                 current_user_id,
                 tag,
                 author_username,
@@ -124,13 +127,13 @@ class ArticlesRepo(Singleton):
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             article_record: Record | None = await conn.fetchrow(  # type: ignore  # for Pylance
-                FAVORITE,
+                FAVORITE_ARTICLE,
                 current_user_id,
                 article_id,
             )
             if article_record:
                 return _article_from_record(article_record)
-            raise ArticleNotFoundError
+            raise ResourceDoesNotExistError
 
     async def unfavorite_article(
         self, *, current_user_id: UUID, article_id: UUID
@@ -138,26 +141,26 @@ class ArticlesRepo(Singleton):
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             article_record: Record | None = await conn.fetchrow(  # type: ignore  # for Pylance
-                UNFAVORITE,
+                UNFAVORITE_ARTICLE,
                 current_user_id,
                 article_id,
             )
             if article_record:
                 return _article_from_record(article_record)
-            raise ArticleNotFoundError
+            raise ResourceDoesNotExistError
 
     async def delete_article(self, *, current_user_id: UUID, article_id: UUID) -> None:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             deletion_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
-                DELETE,
+                DELETE_ARTICLE,
                 current_user_id,
                 article_id,
             )
-            if deletion_record["article_exists"] is False:
-                raise ArticleNotFoundError
-            if deletion_record["deleted"] is False:
-                raise UserDoesNotOwnResourceError
+            if deletion_record["article_deleted"] is False:
+                if deletion_record["article_exists"] is False:
+                    raise ResourceDoesNotExistError
+                raise UserIsNotAuthorizedError
 
     async def update_article(
         self,
@@ -171,7 +174,7 @@ class ArticlesRepo(Singleton):
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             article_record: Record | None = await conn.fetchrow(  # type: ignore  # for Pylance
-                UPDATE,
+                UPDATE_ARTICLE,
                 current_user_id,
                 article_id,
                 title,
@@ -179,10 +182,10 @@ class ArticlesRepo(Singleton):
                 body,
             )
             if article_record is None:
-                raise ArticleNotFoundError
+                raise ResourceDoesNotExistError
             owns: bool = article_record["current_user_owns_article"]
             if not owns:
-                raise UserDoesNotOwnResourceError
+                raise UserIsNotAuthorizedError
             return _article_from_record(article_record)
 
     async def add_comment_to_article(
@@ -209,43 +212,3 @@ class ArticlesRepo(Singleton):
                     **orjson.loads(comment_record["author"]), following=False
                 ),
             )
-
-    async def delete_comment(
-        self,
-        *,
-        current_user_id: UUID,
-        comment_id: UUID,
-    ) -> None:
-        conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            res = await conn.execute(  # type: ignore  # for Pylance
-                DELETE_COMMENT,
-                current_user_id,
-                comment_id,
-            )
-            if res == "DELETE 0":
-                raise Comment
-
-    async def get_comments_for_article(
-        self,
-        *,
-        current_user_id: UUID | None,
-        article_id: UUID,
-    ) -> list[Comment]:
-        conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            comment_records: list[Record] = await conn.fetchrow(  # type: ignore  # for Pylance
-                GET_COMMENTS_FOR_ARTICLE,
-                current_user_id,
-                article_id,
-            )
-            return [
-                CommentInDB(
-                    id=comment_record["id"],
-                    created_at=comment_record["created_at"],
-                    updated_at=comment_record["updated_at"],
-                    body=comment_record["body"],
-                    author=ProfileInDB(**orjson.loads(comment_record["author"])),
-                )
-                for comment_record in comment_records
-            ]

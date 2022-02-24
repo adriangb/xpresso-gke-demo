@@ -15,8 +15,9 @@ WITH article_subquery AS (
     SELECT id FROM articles WHERE id = $2
 ), delete_subquery AS (
     DELETE FROM articles
-    WHERE EXISTS(SELECT * FROM articles_subquery) AND author_id = $1 AND id = (SELECT id FROM articles_subquery)
+    WHERE EXISTS(SELECT * FROM article_subquery) AND author_id = $1 AND id = (SELECT id FROM article_subquery)
+    RETURNING 1
 )
 SELECT
-    EXISTS(SELECT * FROM articles_subquery) AS article_exists
-    EXISTS(SELECT * FROM delete_subquery) AS deleted
+    EXISTS(SELECT * FROM article_subquery) AS article_exists,
+    EXISTS(SELECT * FROM delete_subquery) AS article_deleted

@@ -4,7 +4,7 @@ from uuid import UUID
 import asyncpg  # type: ignore[import]
 import pytest
 
-from app.db.repositories import articles, users
+from app.db.repositories import articles, profiles, users
 from app.models.schemas.users import User
 from tests.hasher import password_hasher
 
@@ -45,7 +45,7 @@ async def registered_users(users_repo: users.UsersRepo) -> list[RegisterdUser]:
             email=user_info.email,
             hashed_password=password_hasher.hash(password),
         )
-        db_user = await users_repo.get_user_by_email(email=user_info.email)
+        db_user = await users_repo.find_user_by_email(email=user_info.email)
         assert db_user is not None
         user = User(
             username=db_user.username,
@@ -68,3 +68,8 @@ async def registered_users(users_repo: users.UsersRepo) -> list[RegisterdUser]:
 @pytest.fixture
 async def articles_repo(app_db_pool: asyncpg.Pool) -> articles.ArticlesRepo:
     return articles.ArticlesRepo(app_db_pool)
+
+
+@pytest.fixture
+async def profiles_repo(app_db_pool: asyncpg.Pool) -> profiles.ProfilesRepo:
+    return profiles.ProfilesRepo(app_db_pool)

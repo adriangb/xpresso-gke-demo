@@ -12,6 +12,7 @@ from tests.integration.fixtures.db import admin_db_connection, app_db_pool
 from tests.integration.fixtures.repos import (
     RegisterdUser,
     articles_repo,
+    profiles_repo,
     registered_users,
     users_repo,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "admin_db_connection",
     "test_client",
     "users_repo",
+    "profiles_repo",
 ]
 
 

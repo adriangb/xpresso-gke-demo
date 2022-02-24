@@ -1,9 +1,8 @@
 from xpresso import FromQuery
 
 from app.db.repositories.articles import ArticlesRepo
-from app.dependencies import OptionalLoggedInUser, RequireLoggedInUser
-from app.models.conversions import convert_article_in_db_to_article_for_response
-from app.models.schemas.articles import ArticlesInResponse
+from app.dependencies import OptionalLoggedInUser
+from app.models.schemas.articles import Article, ArticlesInResponse
 from app.routes.utils import Pagination
 
 
@@ -24,26 +23,5 @@ async def list_articles(
         offset=pagination.offset,
     )
     return ArticlesInResponse.construct(
-        articles=[
-            convert_article_in_db_to_article_for_response(article)
-            for article in articles
-        ]
-    )
-
-
-async def get_user_feed(
-    articles_repo: ArticlesRepo,
-    pagination: Pagination,
-    current_user: RequireLoggedInUser,
-) -> ArticlesInResponse:
-    articles = await articles_repo.get_articles_by_followed_users(
-        current_user_id=current_user.id,
-        limit=pagination.limit,
-        offset=pagination.offset,
-    )
-    return ArticlesInResponse.construct(
-        articles=[
-            convert_article_in_db_to_article_for_response(article)
-            for article in articles
-        ]
+        articles=[Article.from_domain_model(article) for article in articles]
     )

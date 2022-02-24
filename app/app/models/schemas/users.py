@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, HttpUrl
 
-from app.models.schemas.configs import ModelInRequestConfig, ModelInResponseConfig
+from app.models.domain.users import User as UserDomainModel
 
 
 class User(BaseModel):
@@ -14,13 +14,9 @@ class UserForLogin(BaseModel):
     email: EmailStr
     password: str
 
-    Config = ModelInRequestConfig
-
 
 class UserInLogin(BaseModel):
     user: UserForLogin
-
-    Config = ModelInRequestConfig
 
 
 class UserForCreate(BaseModel):
@@ -28,13 +24,9 @@ class UserForCreate(BaseModel):
     email: EmailStr
     password: str
 
-    Config = ModelInRequestConfig
-
 
 class UserInCreate(BaseModel):
     user: UserForCreate
-
-    Config = ModelInRequestConfig
 
 
 class UserForUpdate(BaseModel):
@@ -44,22 +36,24 @@ class UserForUpdate(BaseModel):
     bio: str | None = None
     image: HttpUrl | None = None
 
-    Config = ModelInRequestConfig
-
 
 class UserInUpdate(BaseModel):
     user: UserForUpdate
-
-    Config = ModelInRequestConfig
 
 
 class UserWithToken(User):
     token: str
 
-    Config = ModelInResponseConfig
+    @staticmethod
+    def from_domain_model(user: UserDomainModel, token: str) -> "UserWithToken":
+        return UserWithToken(
+            username=user.username,
+            email=user.email,
+            bio=user.bio,
+            image=user.image,
+            token=token,
+        )
 
 
 class UserInResponse(BaseModel):
     user: UserWithToken
-
-    Config = ModelInResponseConfig

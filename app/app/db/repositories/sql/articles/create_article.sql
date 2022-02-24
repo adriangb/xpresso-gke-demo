@@ -19,4 +19,18 @@ WITH articles_subquery AS (
 	INSERT INTO articles_to_tags (article_id, tag_name)
 	VALUES((SELECT id FROM articles_subquery), unnest($5::text[]))
 )
-SELECT id, created_at, updated_at FROM articles_subquery
+SELECT
+    id,
+    created_at,
+    updated_at,
+    (
+        SELECT json_build_object(
+            'username', username,
+            'bio', bio,
+            'image', image,
+            'following', false
+        )
+        FROM users
+        WHERE id = $1
+    ) AS author
+FROM articles_subquery

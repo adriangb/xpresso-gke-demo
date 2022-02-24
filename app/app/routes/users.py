@@ -7,26 +7,18 @@ from app.services.auth import AuthService
 
 
 async def create_user(
-    user: FromJson[UserInCreate],
+    user_info: FromJson[UserInCreate],
     repo: UsersRepo,
     hasher: PasswordHasher,
     auth: AuthService,
 ) -> UserInResponse:
     # register the user in the db
-    user_id = await repo.create_user(
-        username=user.user.username,
-        email=user.user.email,
-        hashed_password=hasher.hash(user.user.password),
+    user = await repo.create_user(
+        username=user_info.user.username,
+        email=user_info.user.email,
+        hashed_password=hasher.hash(user_info.user.password),
     )
     # create a token for them
-    token = auth.create_access_token(user_id=user_id)
+    token = auth.create_access_token(user_id=user.id)
     # craete and return the response user model
-    return UserInResponse.construct(
-        user=UserWithToken.construct(
-            username=user.user.username,
-            email=user.user.email,
-            bio=None,
-            image=None,
-            token=token,
-        )
-    )
+    return UserInResponse.construct(user=UserWithToken.from_domain_model(user, token))

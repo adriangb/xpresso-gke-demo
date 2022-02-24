@@ -1,21 +1,26 @@
--- $1 = current user's ID, maybe null
--- $5 = limit
--- $6 = offset
+/*
+Parameters:
+- $1: user id, can be null. used to determine if the user liked the article and/or follows the author.
+- $2: offset
+- $3: limit
+
+The main thing to note here is that the author subquery is aggregated into a JSON object.
+*/
 SELECT
-    articles.id,
-    articles.title,
-    articles.description,
+    id,
+    title,
+    description,
     articles.body,
     articles.created_at,
     articles.updated_at,
-    EXISTS(SELECT 1 FROM favorites WHERE $1::uuid IS NOT NULL AND user_id = $1::uuid AND article_id = id) AS favorited,
+    EXISTS(SELECT * FROM favorites WHERE user_id = $1 AND article_id = id) AS favorited,
     (SELECT COUNT(*) FROM favorites WHERE article_id = id) AS favorites_count,
     (
         SELECT json_build_object(
             'username', username,
             'bio', bio,
             'image', image,
-            'following', EXISTS(SELECT 1 FROM followers_to_followings WHERE $1::uuid IS NOT NULL AND follower_id = $1::uuid AND following_id = author_id)
+            'following', true
         )
         FROM users
         WHERE id = author_id
@@ -23,6 +28,6 @@ SELECT
     (SELECT array_agg(tag_name) FROM articles_to_tags WHERE article_id = id) AS tags
 FROM articles
 INNER JOIN followers_to_followings ON (follower_id = $1 AND following_id = articles.author_id)
-ORDER BY created_at DESC
+ORDER BY articles.created_at DESC
 LIMIT $2
-OFFSET $3;
+OFFSET $3

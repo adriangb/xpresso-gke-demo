@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Mapping
 from uuid import UUID
 
@@ -6,155 +7,39 @@ import asyncpg  # type: ignore[import]
 from xpresso.dependencies.models import Singleton
 
 from app.db.connection import InjectDBConnectionPool
+from app.db.repositories.exceptions import ResourceDoesNotExistError
+from app.models.domain.users import User
 
 Record = Mapping[str, Any]
 
 
-@dataclass(frozen=True, slots=True)
-class UserInDB:
-    id: UUID
-    username: str
-    email: str
-    hashed_password: str
-    bio: str | None
-    image: str | None
-
-
-GET_USER_BY_EMAIL = """\
-SELECT id,
-       username,
-       email,
-       hashed_password,
-       bio,
-       image
-FROM users
-WHERE email = $1
-LIMIT 1;
-"""
-
-
-GET_USER_BY_NAME = """\
-SELECT id,
-       username,
-       email,
-       hashed_password,
-       bio,
-       image
-FROM users
-WHERE username = $1
-LIMIT 1;
-"""
-
-
-GET_USER_BY_ID = """\
-SELECT id,
-       username,
-       email,
-       hashed_password,
-       bio,
-       image
-FROM users
-WHERE id = $1
-LIMIT 1;
-"""
-
-
-CREATE_USER = """\
-INSERT INTO users (username, email, hashed_password)
-VALUES ($1, $2, $3)
-RETURNING id
-"""
-
-UPDATE_USER = """\
-UPDATE users
-SET username        = COALESCE($2, username),
-    email           = COALESCE($3, email),
-    hashed_password = COALESCE($4, hashed_password),
-    bio             = COALESCE($5, bio),
-    image           = COALESCE($6, image)
-WHERE id = $1
-"""
-
-FOLLOW_USER_AND_RETURN_THEIR_PROFILE = """\
-WITH followed_profile AS (
-    SELECT id, username, bio, image
-    FROM users
-    WHERE username = $1
-), _ AS (
-    INSERT INTO followers_to_followings (follower_id, following_id)
-    VALUES (
-        -- This is the follower_id, we know their user id from the token
-        ($2),
-        -- But we don't know the id of the user they want to follow
-        -- We pull it from the CTE
-        (SELECT id from followed_profile)
-    )
-)
-SELECT username, bio, image FROM followed_profile;
-"""
-
-UNFOLLOW_USER_AND_RETURN_THEIR_PROFILE = """\
-WITH followed_profile AS (
-    SELECT id, username, bio, image
-    FROM users
-    WHERE username = $1
-), _ AS (
-    DELETE FROM followers_to_followings
-    -- $2 is the follower id, which we get from the user's token
-    WHERE (follower_id = $2 and following_id = (SELECT id from followed_profile))
-)
-SELECT username, bio, image FROM followed_profile;
-"""
-
-
-CHECK_IF_FOLLOWING_AND_RETURN_PROFILE = """\
-WITH followed_profile AS (
-        SELECT id, username, bio, image
-        FROM users
-        WHERE username = $1
-    ),
-    follows AS (
-        SELECT exists(
-            SELECT 1 FROM followers_to_followings
-            -- $2 is the follower id, which we get from the user's token
-            WHERE (follower_id = $2 and following_id = (SELECT id from followed_profile))
-        ) AS follows
-    )
-SELECT username, bio, image, follows FROM followed_profile CROSS JOIN follows;
-"""
-
-
-@dataclass(frozen=True, slots=True)
-class Profile:
-    username: str
-    image: str | None
-    bio: str | None
-    follows: bool
-
-
-class FolloweeDoesNotExist(Exception):
-    pass
+QUERY_DIR = Path(__file__).parent / "sql" / "users"
+FIND_USER_BY_EMAIL = open(QUERY_DIR / "find_user_by_email.sql").read()
+CREATE_USER = open(QUERY_DIR / "create_user.sql").read()
+GET_HASHED_PASSWORD = open(QUERY_DIR / "get_hashed_password.sql").read()
+GET_USER = open(QUERY_DIR / "get_user.sql").read()
+UPDATE_USER = open(QUERY_DIR / "update_user.sql").read()
 
 
 @dataclass(slots=True)
 class UsersRepo(Singleton):
     pool: InjectDBConnectionPool
 
-    async def get_user_by_email(self, email: str) -> UserInDB | None:
+    async def find_user_by_email(self, email: str) -> User:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            user_row: Record | None = await conn.fetchrow(GET_USER_BY_EMAIL, email)  # type: ignore  # for Pylance
+            user_row: Record | None = await conn.fetchrow(FIND_USER_BY_EMAIL, email)  # type: ignore  # for Pylance
         if user_row:
-            return UserInDB(**user_row)
-        return None
+            return User(**user_row)
+        raise ResourceDoesNotExistError
 
-    async def get_user_by_id(self, id: UUID) -> UserInDB | None:
+    async def get_user(self, user_id: UUID) -> User:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            user_row: Record | None = await conn.fetchrow(GET_USER_BY_ID, id)  # type: ignore  # for Pylance
+            user_row: Record | None = await conn.fetchrow(GET_USER, user_id)  # type: ignore  # for Pylance
         if user_row:
-            return UserInDB(**user_row)
-        return None
+            return User(**user_row)
+        raise ResourceDoesNotExistError
 
     async def create_user(
         self,
@@ -162,7 +47,7 @@ class UsersRepo(Singleton):
         username: str,
         email: str,
         hashed_password: str,
-    ) -> UUID:
+    ) -> User:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
             user_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
@@ -171,62 +56,34 @@ class UsersRepo(Singleton):
                 email,
                 hashed_password,
             )
-            return user_record["id"]  # type: ignore[no-any-return]
+            return User(
+                id=user_record["id"],
+                username=username,
+                email=email,
+                image=None,
+                bio=None,
+                hashed_password=hashed_password,
+            )
 
     async def update_user(
         self,
         *,
-        id_of_current_user: UUID,  # from JWT
+        current_user_id: UUID,  # from JWT
         username: str | None = None,
         email: str | None = None,
         hashed_password: str | None = None,
         bio: str | None = None,
         image: str | None = None,
-    ) -> None:
+    ) -> User:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            await conn.execute(  # type: ignore  # for Pylance
+            user_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
                 UPDATE_USER,
-                id_of_current_user,
+                current_user_id,
                 username,
                 email,
-                hashed_password,
                 bio,
                 image,
+                hashed_password,
             )
-
-    async def follow_user(
-        self, username_to_follow: str, id_of_current_user: UUID
-    ) -> Profile:
-        conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            try:
-                followed_profile: Record = await conn.fetchrow(FOLLOW_USER_AND_RETURN_THEIR_PROFILE, username_to_follow, id_of_current_user)  # type: ignore  # for Pylance
-            except asyncpg.exceptions.NotNullViolationError as e:
-                # the user `username_to_follow` does not exist in the DB
-                raise FolloweeDoesNotExist from e
-            return Profile(**followed_profile, follows=True)
-
-    async def unfollow_user(
-        self, username_to_unfollow: str, id_of_current_user: UUID
-    ) -> Profile:
-        conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            try:
-                unfollowed_profile: Record = await conn.fetchrow(UNFOLLOW_USER_AND_RETURN_THEIR_PROFILE, username_to_unfollow, id_of_current_user)  # type: ignore  # for Pylance
-            except asyncpg.exceptions.NotNullViolationError as e:
-                # the user `username_to_unfollow` does not exist in the DB
-                raise FolloweeDoesNotExist from e
-            return Profile(**unfollowed_profile, follows=False)
-
-    async def get_profile(
-        self, username_of_target_profile: str, id_of_current_user: UUID | None
-    ) -> Profile:
-        conn: asyncpg.Connection
-        async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            try:
-                unfollowed_profile: Record = await conn.fetchrow(CHECK_IF_FOLLOWING_AND_RETURN_PROFILE, username_of_target_profile, id_of_current_user)  # type: ignore  # for Pylance
-            except asyncpg.exceptions.NotNullViolationError as e:
-                # the user `username_to_unfollow` does not exist in the DB
-                raise FolloweeDoesNotExist from e
-            return Profile(**unfollowed_profile)
+            return User(**user_record)

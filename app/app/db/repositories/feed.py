@@ -15,7 +15,7 @@ Record = Mapping[str, Any]
 
 
 QUERY_DIR = Path(__file__).parent / "sql" / "feed"
-GET_FEED = open(QUERY_DIR / "get.sql").read()
+GET_FEED = open(QUERY_DIR / "get_feed.sql").read()
 
 
 @dataclass(slots=True)

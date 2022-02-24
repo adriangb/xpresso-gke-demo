@@ -31,21 +31,14 @@ async def update_user(
     else:
         hashed_password = None
     # update the user in the database
-    await repo.update_user(
-        id_of_current_user=current_user.id,
+    updated_user = await repo.update_user(
+        current_user_id=current_user.id,
         username=user_info.username,
         email=user_info.email,
         hashed_password=hashed_password,
         bio=user_info.bio,
         image=user_info.image,
     )
-    # build and return the user model
     return UserInResponse.construct(
-        user=UserWithToken.construct(
-            username=user_info.username or current_user.username,
-            email=user_info.email or current_user.email,
-            bio=user_info.bio if user_info.bio is not None else current_user.bio,
-            image=current_user.image or current_user.image,
-            token=current_user.token,
-        )
+        user=UserWithToken.from_domain_model(updated_user, current_user.token)
     )

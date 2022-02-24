@@ -1,0 +1,1 @@
+SELECT ARRAY(SELECT tag_name FROM tags)

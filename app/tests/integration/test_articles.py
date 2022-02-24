@@ -6,7 +6,7 @@ from httpx import AsyncClient, Response
 from pydantic import BaseModel, Field
 
 from app.db.repositories.articles import ArticlesRepo
-from app.db.repositories.users import UsersRepo
+from app.db.repositories.profiles import ProfilesRepo
 from tests.integration.conftest import RegistedUserWithToken
 from tests.integration.fixtures.repos import REGISTERED_USERS_INFO
 
@@ -179,20 +179,20 @@ async def test_articles_feed(
     test_client: AsyncClient,
     registered_users_with_tokens: list[RegistedUserWithToken],
     articles_repo: ArticlesRepo,
-    users_repo: UsersRepo,
+    profiles_repo: ProfilesRepo,
 ) -> None:
     # follow users
-    await users_repo.follow_user(
+    await profiles_repo.follow_user(
         username_to_follow=registered_users_with_tokens[0].user.username,
-        id_of_current_user=registered_users_with_tokens[1].id,
+        current_user_id=registered_users_with_tokens[1].id,
     )
-    await users_repo.follow_user(
+    await profiles_repo.follow_user(
         username_to_follow=registered_users_with_tokens[0].user.username,
-        id_of_current_user=registered_users_with_tokens[2].id,
+        current_user_id=registered_users_with_tokens[2].id,
     )
-    await users_repo.follow_user(
+    await profiles_repo.follow_user(
         username_to_follow=registered_users_with_tokens[1].user.username,
-        id_of_current_user=registered_users_with_tokens[2].id,
+        current_user_id=registered_users_with_tokens[2].id,
     )
     # create a couple of articles
     await articles_repo.create_article(

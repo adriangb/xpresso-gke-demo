@@ -45,7 +45,7 @@ async def app_db_pool(
     # use a unique name so we don't need to clean up
     # and are independant of any other running tests
     db_name = "".join(random.choices(string.ascii_lowercase, k=16))
-    await admin_db_connection.execute(f"CREATE DATABASE {db_name}")
+    await admin_db_connection.execute(f"CREATE DATABASE {db_name}")  # type: ignore  # for Pylance
     async with asyncpg.create_pool(  # type: ignore
         # we don't need concurrency for tests
         min_size=1,
