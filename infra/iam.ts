@@ -3,7 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import * as config from "./config";
 
-// Create a ServiceAccount
+// Create aa service account for edgedb with full control over CloudSQL
 export const serviceAccount = new google.iam.v1.ServiceAccount(
   "appServiceAccount",
   {
@@ -27,7 +27,7 @@ existingPolicy.then((p) => {
       members: pulumi.all([
         pulumi.interpolate`serviceAccount:${serviceAccount.email}`,
       ]),
-      role: "roles/cloudsql.client",
+      role: "roles/cloudsql.editor",
     },
     {
       members: pulumi.all([

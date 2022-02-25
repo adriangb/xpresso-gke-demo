@@ -1,4 +1,4 @@
-import * as classic from "@pulumi/gcp";
+import * as cloudsql from "@pulumi/gcp";
 import * as pulumi from "@pulumi/pulumi";
 import * as random from "@pulumi/random";
 import * as gcloud from "@pulumi/google-native";
@@ -20,16 +20,13 @@ export const instance = new gcloud.sqladmin.v1.Instance("web-db", {
   },
 });
 
-export const db = new gcloud.sqladmin.v1.Database("db", {
-  name: new random.RandomPet("dbName", { length: 2 }).id,
-  instance: instance.name,
-  project: config.projectId,
-});
+export const dbConnectionString = pulumi.interpolate`${config.projectId}:${config.region}:${instance.name}`;
+
 
 // Create a user with the configured credentials for the app to use.
 // TODO: Switch to google native version when User is supported:
 // https://github.com/pulumi/pulumi-google-native/issues/47
-export const user = new classic.sql.User("web-db-user", {
+export const user = new cloudsql.sql.User("edgedb-cloudsql-user", {
   instance: instance.name,
   // The name MUST be the service account email
   // WITHOUT the .gserviceaccount.com suffix
@@ -37,22 +34,12 @@ export const user = new classic.sql.User("web-db-user", {
   name: iam.serviceAccount.email.apply((v) =>
     v.replace(".gserviceaccount.com", "")
   ),
-  password: genRandomPassword("dbPassword", 16),
+  password: new random.RandomPassword("edgedb-cloudsql-password", {
+    length: 16,
+    special: false,
+  }).result,
   project: config.projectId,
   // Careful here: CLOUD_IAM_SERVICE_ACCOUNT != CLOUD_IAM_USER
   // The latter is for end-user IAM access, not service accounts
   type: "CLOUD_IAM_SERVICE_ACCOUNT",
 });
-
-function genRandomPassword(
-  name: string,
-  length: number
-): pulumi.Output<string> {
-  let password = new random.RandomString(name, {
-    upper: false,
-    number: true,
-    special: true,
-    length: length,
-  }).result;
-  return pulumi.secret(password);
-}
