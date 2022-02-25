@@ -38,6 +38,11 @@ class UserService(Singleton):
     users_repo: UsersRepo
 
     async def get_current_user(self, authorization: str) -> LoggedInUser:
+        # note: we're hitting the DB on _every_ request to validate the user
+        # this kinda makes a stateless JWT pointless
+        # Really the way we'd solve this is with:
+        # 1. Shorter expiration times + refresh tokens
+        # 2. An in-memory KV store holding a blacklist of tokens with a TTL for each set to it's expiration time
         token = extract_token_from_authroization_header(authorization)
         user_id = self.auth_service.verify_access_token_and_extract_user_id(token)
         maybe_user_in_db = await self.users_repo.get_user(user_id=user_id)
