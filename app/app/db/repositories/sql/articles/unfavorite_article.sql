@@ -11,6 +11,7 @@ If the article does exist, this will return the article regardless of whether it
 WITH favorites_subquery AS (
 	DELETE FROM favorites
 	WHERE user_id = $1 AND article_id = $2
+    RETURNING 1
 )
 SELECT
     articles.id,
@@ -20,7 +21,7 @@ SELECT
     articles.created_at,
     articles.updated_at,
     false AS favorited,
-    (SELECT COUNT(*) FROM favorites WHERE article_id = id) AS favorites_count,
+    (SELECT COUNT(*) - (SELECT COUNT(*) FROM favorites_subquery) FROM favorites WHERE article_id = id) AS favorites_count,
     (
         SELECT json_build_object(
             'username', username,
@@ -31,6 +32,6 @@ SELECT
         FROM users
         WHERE id = author_id
     ) AS author,
-    (SELECT array_agg(tag_name) FROM articles_to_tags WHERE article_id = id) AS tags
+    (SELECT array_agg(tag_name ORDER BY tag_name ASC) FROM articles_to_tags WHERE article_id = id) AS tags
 FROM articles
 WHERE id = $2

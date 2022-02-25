@@ -16,5 +16,5 @@ WITH comments_subquery AS (
     RETURNING 1
 )
 SELECT
-    EXISTS(SELECT * FROM comments_subquery) AS comment_exists
+    EXISTS(SELECT * FROM comments_subquery) AS comment_exists,
     EXISTS(SELECT * FROM deletion_subquery) AS comment_deleted

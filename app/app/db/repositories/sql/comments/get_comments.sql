@@ -8,6 +8,7 @@ SELECT
     id,
     created_at,
     updated_at,
+    body,
     (
         SELECT json_build_object(
             'username', username,

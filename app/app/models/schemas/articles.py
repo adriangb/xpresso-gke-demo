@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from app.models.domain.articles import Article as ArticleDomainModel
 from app.models.schemas.configs import ModelInRequestConfig, ModelInResponseConfig
@@ -52,6 +52,9 @@ class ArticleInResponse(BaseModel):
 
 class ArticlesInResponse(BaseModel):
     articles: list[Article]
+    articles_count: int
+
+    Config = ModelInResponseConfig
 
 
 class ArticleForCreate(BaseModel):
@@ -59,6 +62,10 @@ class ArticleForCreate(BaseModel):
     description: str
     body: str
     tags: list[str] | None = Field(alias="tagList")
+
+    @validator("tags")
+    def strip_whitespace_from_tags(cls, tags: list[str]) -> list[str]:
+        return [t.strip() for t in tags]
 
     Config = ModelInRequestConfig
 

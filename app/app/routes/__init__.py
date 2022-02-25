@@ -38,11 +38,7 @@ api_routes = [
     Path(
         "/profiles/{username}/follow",
         post=Operation(profile.follow_user, **orjson_response()),
-        tags=["profiles"],
-    ),
-    Path(
-        "/profiles/{username}/unfollow",
-        post=Operation(profile.unfollow_user, **orjson_response()),
+        delete=Operation(profile.unfollow_user, **orjson_response()),
         tags=["profiles"],
     ),
     Path(
@@ -87,8 +83,8 @@ api_routes = [
         tags=["articles"],
     ),
     Path(
-        "/articles/{slug}/comment/{comment_id}",
-        post=Operation(comments.delete_comment, **empty_response()),
+        "/articles/{slug}/comments/{comment_id}",
+        delete=Operation(comments.delete_comment, **empty_response()),
         tags=["articles"],
     ),
     Path(

@@ -50,7 +50,7 @@ SELECT
         FROM users
         WHERE id = author_id
     ) AS author,
-    (SELECT array_agg(tag_name) FROM articles_to_tags WHERE article_id = id) AS tags
+    (SELECT array_agg(tag_name ORDER BY tag_name ASC) FROM articles_to_tags WHERE article_id = id) AS tags
 FROM articles
 WHERE (
     ($2::text IS NULL OR id IN (SELECT article_id FROM matched_tags))

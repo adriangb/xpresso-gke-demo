@@ -7,7 +7,10 @@ import asyncpg  # type: ignore[import]
 from xpresso.dependencies.models import Singleton
 
 from app.db.connection import InjectDBConnectionPool
-from app.db.repositories.exceptions import ResourceDoesNotExistError
+from app.db.repositories.exceptions import (
+    ResourceAlreadyExists,
+    ResourceDoesNotExistError,
+)
 from app.models.domain.users import User
 
 Record = Mapping[str, Any]
@@ -50,12 +53,15 @@ class UsersRepo(Singleton):
     ) -> User:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            user_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
-                CREATE_USER,
-                username,
-                email,
-                hashed_password,
-            )
+            try:
+                user_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
+                    CREATE_USER,
+                    username,
+                    email,
+                    hashed_password,
+                )
+            except asyncpg.UniqueViolationError as e:
+                raise ResourceAlreadyExists from e
             return User(
                 id=user_record["id"],
                 username=username,

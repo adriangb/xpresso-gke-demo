@@ -77,6 +77,6 @@ async def unfollow_user(
             username=followed_profile.username,
             bio=followed_profile.bio,
             image=followed_profile.image,
-            following=True,
+            following=False,
         )
     )

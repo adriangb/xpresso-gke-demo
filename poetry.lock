@@ -844,12 +844,12 @@ pydantic = ">=1,<2"
 starlette = ">=0.16.0,<1"
 
 [extras]
-migrations = ["migri", "asyncpg"]
+migrations = ["migri"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "28b8d43ad0733cfb417a6b462968dc69c3b9b3b26e03c4ea9a9b0e7fd88a0a5a"
+content-hash = "0ff4b80c5e635c9c2140a8b785dfd1a3e7cb4ff8dc7fb8c5ffc7b7712b25435f"
 
 [metadata.files]
 anyio = [

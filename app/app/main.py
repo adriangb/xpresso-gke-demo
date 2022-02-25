@@ -1,7 +1,9 @@
 import asyncio
 
 import uvicorn  # type: ignore[import]
+from starlette.middleware.cors import CORSMiddleware
 from xpresso import App
+from xpresso.middleware import Middleware
 
 from app.config import AppConfig
 from app.logconfig import get_json_logconfig
@@ -9,7 +11,15 @@ from app.routes import routes
 
 
 def create_app(version: str) -> App:
-    return App(routes=routes, version=version, title="Conduit")
+    middleware = [
+        Middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_headers=["*"],
+            allow_methods=["*"],
+        )
+    ]
+    return App(routes=routes, middleware=middleware, version=version, title="Conduit")
 
 
 async def main() -> None:

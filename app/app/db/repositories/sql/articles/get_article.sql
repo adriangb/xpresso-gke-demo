@@ -28,6 +28,6 @@ SELECT
         FROM users
         WHERE id = author_id
     ) AS author,
-    (SELECT array_agg(tag_name) FROM articles_to_tags WHERE article_id = id) AS tags
+    (SELECT array_agg(tag_name ORDER BY tag_name ASC) FROM articles_to_tags WHERE article_id = id) AS tags
 FROM articles
 WHERE id = $2

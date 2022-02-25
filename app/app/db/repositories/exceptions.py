@@ -4,3 +4,7 @@ class ResourceDoesNotExistError(Exception):
 
 class UserIsNotAuthorizedError(Exception):
     pass
+
+
+class ResourceAlreadyExists(Exception):
+    pass

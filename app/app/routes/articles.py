@@ -23,5 +23,6 @@ async def list_articles(
         offset=pagination.offset,
     )
     return ArticlesInResponse.construct(
-        articles=[Article.from_domain_model(article) for article in articles]
+        articles=[Article.from_domain_model(article) for article in articles],
+        articles_count=len(articles),
     )

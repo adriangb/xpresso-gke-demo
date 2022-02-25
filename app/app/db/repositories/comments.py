@@ -35,7 +35,7 @@ class CommentsRepo(Singleton):
     ) -> None:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            deletion_record: Record = await conn.execute(  # type: ignore  # for Pylance
+            deletion_record: Record = await conn.fetchrow(  # type: ignore  # for Pylance
                 DELETE_COMMENT,
                 current_user_id,
                 comment_id,
@@ -53,7 +53,7 @@ class CommentsRepo(Singleton):
     ) -> list[Comment]:
         conn: asyncpg.Connection
         async with self.pool.acquire() as conn:  # type: ignore  # for Pylance
-            comment_records: list[Record] = await conn.fetchrow(  # type: ignore  # for Pylance
+            comment_records: list[Record] = await conn.fetch(  # type: ignore  # for Pylance
                 GET_COMMENTS,
                 current_user_id,
                 article_id,

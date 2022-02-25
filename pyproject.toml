@@ -18,10 +18,10 @@ orjson = "^3.6.7"
 argon2-cffi = "^21.3.0"
 pydantic = {extras = ["email"], version = "^1.9.0"}
 PyJWT = "^2.3.0"
-migri = {version = "^0.7.0", optional = true, extras = ["postgresql"] }
+migri = {version = "^0.7.0", optional = true }
 
 [tool.poetry.extras]
-migrations = ["migri", "asyncpg"]
+migrations = ["migri"]
 
 [tool.poetry.dev-dependencies]
 requests = "~2"     # for TestClient
