@@ -382,7 +382,7 @@ name = "migri"
 version = "0.7.0"
 description = ""
 category = "main"
-optional = false
+optional = true
 python-versions = "<3.11,>=3.7"
 
 [package.dependencies]
@@ -697,7 +697,7 @@ name = "sqlparse"
 version = "0.4.2"
 description = "A non-validating SQL parser."
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.5"
 
 [[package]]
@@ -797,7 +797,7 @@ test = ["aiohttp", "flake8 (>=3.9.2,<3.10.0)", "psutil", "pycodestyle (>=2.7.0,<
 
 [[package]]
 name = "virtualenv"
-version = "20.13.1"
+version = "20.13.2"
 description = "Virtual Python Environment builder"
 category = "dev"
 optional = false
@@ -843,10 +843,13 @@ di = ">=0.59.0,<0.60.0"
 pydantic = ">=1,<2"
 starlette = ">=0.16.0,<1"
 
+[extras]
+migrations = ["migri", "asyncpg"]
+
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "7f9ba4553c85b001316d662f665f8e651964b54e17d6125f333b7a884d032c2e"
+content-hash = "28b8d43ad0733cfb417a6b462968dc69c3b9b3b26e03c4ea9a9b0e7fd88a0a5a"
 
 [metadata.files]
 anyio = [
@@ -1436,8 +1439,8 @@ uvloop = [
     {file = "uvloop-0.16.0.tar.gz", hash = "sha256:f74bc20c7b67d1c27c72601c78cf95be99d5c2cdd4514502b4f3eb0933ff1228"},
 ]
 virtualenv = [
-    {file = "virtualenv-20.13.1-py2.py3-none-any.whl", hash = "sha256:45e1d053cad4cd453181ae877c4ffc053546ae99e7dd049b9ff1d9be7491abf7"},
-    {file = "virtualenv-20.13.1.tar.gz", hash = "sha256:e0621bcbf4160e4e1030f05065c8834b4e93f4fcc223255db2a823440aca9c14"},
+    {file = "virtualenv-20.13.2-py2.py3-none-any.whl", hash = "sha256:e7b34c9474e6476ee208c43a4d9ac1510b041c68347eabfe9a9ea0c86aa0a46b"},
+    {file = "virtualenv-20.13.2.tar.gz", hash = "sha256:01f5f80744d24a3743ce61858123488e91cb2dd1d3bdf92adaf1bba39ffdedf0"},
 ]
 watchgod = [
     {file = "watchgod-0.7-py3-none-any.whl", hash = "sha256:d6c1ea21df37847ac0537ca0d6c2f4cdf513562e95f77bb93abbcf05573407b7"},

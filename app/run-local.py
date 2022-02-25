@@ -6,7 +6,7 @@ import uvicorn  # type: ignore[import]
 from app.config import AppConfig, AuthConfig, DatabaseConfig
 from app.db.connection import get_pool
 from app.db.migrations import run as migrations
-from app.main import app
+from app.main import create_app
 
 
 async def main() -> None:
@@ -14,9 +14,10 @@ async def main() -> None:
         app_port=8000,
         app_host="localhost",
         log_level="DEBUG",
+        env="test",
+        version=open("VERSION.txt").read(),
+        service_name="Conduit",
     )
-    # run with
-    # docker run --rm -it -p 5432:5432 -e POSTGRES_PASSWORD=postgres --mount type=tmpfs,destination=/var/lib/postgresql/data postgres
     db_config = DatabaseConfig(
         db_username="postgres",
         db_password="postgres",  # type: ignore[arg-type]
@@ -25,6 +26,10 @@ async def main() -> None:
         db_database_name="postgres",
     )
     auth_config = AuthConfig(token_signing_key="foobarbaz")  # type: ignore[arg-type]
+
+    # create the app
+    app = create_app(version=app_config.version)
+
     # bind configs to di container
     app.dependency_overrides[AppConfig] = lambda: app_config
     app.dependency_overrides[DatabaseConfig] = lambda: db_config

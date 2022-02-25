@@ -2,5 +2,5 @@
 
 !/app
 !/requirements.txt
-!/requirements-dev.txt
+!/requirements-migrations.txt
 !/tests

@@ -20,3 +20,6 @@ class AppConfig(Config):
     app_port: int
     app_host: str
     log_level: Literal["DEBUG", "INFO"]
+    service_name: str
+    env: str
+    version: str

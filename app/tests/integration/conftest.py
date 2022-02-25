@@ -5,8 +5,8 @@ import pytest
 from xpresso import App
 
 from app.db.repositories.users import UsersRepo
-from app.main import app
 from app.services.auth import AuthService
+from tests.app import app
 from tests.integration.fixtures.client import test_client
 from tests.integration.fixtures.db import admin_db_connection, app_db_pool
 from tests.integration.fixtures.repos import (

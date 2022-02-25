@@ -16,9 +16,12 @@ asyncpg = "^0.25.0"
 python-json-logger = "^2.0.2"
 orjson = "^3.6.7"
 argon2-cffi = "^21.3.0"
-migri = {extras = ["postgresql"], version = "^0.7.0"}
 pydantic = {extras = ["email"], version = "^1.9.0"}
 PyJWT = "^2.3.0"
+migri = {version = "^0.7.0", optional = true, extras = ["postgresql"] }
+
+[tool.poetry.extras]
+migrations = ["migri", "asyncpg"]
 
 [tool.poetry.dev-dependencies]
 requests = "~2"     # for TestClient

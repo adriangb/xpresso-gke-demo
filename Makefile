@@ -16,7 +16,7 @@ install-poetry: .install-poetry
 	@echo "---- 📦 Building package ----"
 	rm -rf .venv
 	python -m pip install -U pip wheel
-	poetry install
+	poetry install --extras api migrations
 	git init .
 	poetry run pre-commit install --install-hooks
 	touch .init
@@ -32,6 +32,14 @@ lint: .init
 	@echo ---- ⏳ Running linters ----
 	@(poetry run pre-commit run --all-files && echo "---- ✅ Linting passed ----" && exit 0|| echo "---- ❌ Linting failed ----" && exit 1)
 
-test: .init
-	@echo ---- ⏳ Running tests ----
+.postgres:
+	@(docker start test-postgres || docker run -d --name test-postgres --rm -it -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:14 -c fsync=off -c full_page_writes=off -c synchronous_commit=off)
+	@(timeout 15s bash -c "until docker exec test-postgres pg_isready ; do sleep 1 ; done")
+
+test: .init .postgres
+	@echo ---- 🧪 Running tests ----
 	@(poetry run pytest -v --cov --cov-report term && echo "---- ✅ Tests passed ----" && exit 0 || echo "---- ❌ Tests failed ----" && exit 1)
+
+run-local: .init .postgres
+	@echo ---- 🚀 Running app locally ----
+	@(poetry run python app/run-local.py)

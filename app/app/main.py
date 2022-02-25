@@ -7,12 +7,16 @@ from app.config import AppConfig
 from app.logconfig import get_json_logconfig
 from app.routes import routes
 
-app = App(routes=routes)
+
+def create_app(version: str) -> App:
+    return App(routes=routes, version=version, title="Conduit")
 
 
 async def main() -> None:
     # load config
     app_config = AppConfig()  # type: ignore  # values are loaded from env vars
+
+    app = create_app(version=app_config.version)
 
     # set up JSON logging
     log_config = get_json_logconfig(app_config.log_level)

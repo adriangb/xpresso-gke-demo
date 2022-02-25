@@ -1,21 +1,14 @@
 import random
 import string
-from time import time
 from typing import AsyncGenerator
 
-import anyio
 import asyncpg  # type: ignore[import]
 import pytest
 from pydantic import SecretStr
 
 from app.config import DatabaseConfig
 from app.db.migrations import run as migrations  # type: ignore[import]
-from app.main import app
-
-# this makes postgres an in-memory db to speed up tests
-RUN_POSTGRES_COMMAND = "docker run --rm -it -p 5432:5432 -e POSTGRES_PASSWORD=postgres --mount type=tmpfs,destination=/var/lib/postgresql/data postgres"
-
-DB_CONNECT_TIMEOUT = 10
+from tests.app import app
 
 
 class Config(DatabaseConfig):
@@ -31,55 +24,44 @@ async def admin_db_connection(
     anyio_backend: str,
 ) -> AsyncGenerator[asyncpg.Connection, None]:
     """Connection used to create test databases"""
-    config = Config()  # type: ignore
-    start = time()
-    while time() - start < DB_CONNECT_TIMEOUT:
-        try:
-            print(config.json())
-            conn: asyncpg.Connection = await asyncpg.connect(  # type: ignore
-                user=config.db_username,
-                password=config.db_password.get_secret_value(),
-                database=config.db_database_name,
-                port=config.db_port,
-                host=config.db_host,
-            )
-            print("connected")
-            try:
-                yield conn
-            finally:
-                await conn.close()  # type: ignore
-            return
-        except Exception as e:
-            if time() - start < DB_CONNECT_TIMEOUT:
-                await anyio.sleep(1)
-                continue
-            # Probably Postgres is not running
-            raise RuntimeError(
-                "It seems like postgres is not running."
-                "\n You can run it locally with docker."
-                "\n On MacOS or Linux:"
-                f"\n  {RUN_POSTGRES_COMMAND}"
-            ) from e
+    db_config = Config()
+    conn: asyncpg.Connection = await asyncpg.connect(  # type: ignore
+        user=db_config.db_username,
+        password=db_config.db_password.get_secret_value(),
+        database=db_config.db_database_name,
+        port=db_config.db_port,
+        host=db_config.db_host,
+    )
+    try:
+        yield conn
+    finally:
+        await conn.close()  # type: ignore
+    return
 
 
 @pytest.fixture
 async def app_db_pool(
     admin_db_connection: asyncpg.Connection,
 ) -> AsyncGenerator[asyncpg.Pool, None]:
+    db_config = Config()
     # use a unique name so we don't need to clean up
     # and are independant of any other running tests
     db_name = "".join(random.choices(string.ascii_lowercase, k=16))
     await admin_db_connection.execute(f"CREATE DATABASE {db_name}")  # type: ignore  # for Pylance
+    from time import time
+
+    start = time()
     async with asyncpg.create_pool(  # type: ignore
         # we don't need concurrency for tests
         min_size=1,
         max_size=1,
-        user="postgres",
-        password="postgres",
+        user=db_config.db_username,
+        password=db_config.db_password.get_secret_value(),
         database=db_name,
-        port=5432,
-        host="localhost",
+        port=db_config.db_port,
+        host=db_config.db_host,
     ) as app_pool:
+        print(f"Took {time()-start:.2f} sec to create pool")
         conn: asyncpg.Connection
         async with app_pool.acquire() as conn:  # type: ignore
             await migrations.run(conn)
