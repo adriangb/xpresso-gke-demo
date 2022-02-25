@@ -39,25 +39,25 @@ repos:
         files: ^pyproject.toml|poetry.lock|app/requirements-migrations.txt$
         pass_filenames: false
       - id: isort
-        name: Run isort on app source code
+        name: Run isort
         language: system
         entry: poetry run isort
         types: [python]
         pass_filenames: true
       - id: black
-        name: Run black on app source code
+        name: Run black
         language: system
         entry: poetry run black
         types: [python]
         pass_filenames: true
       - id: flake8
-        name: Run flake8 on app source code
+        name: Run flake8
         language: system
         entry: poetry run flake8 --ignore E501
         types: [python]
         pass_filenames: true
       - id: mypy
-        name: Run mypy on app source code
+        name: Run mypy
         language: system
         entry: poetry run mypy
         types: [python]
