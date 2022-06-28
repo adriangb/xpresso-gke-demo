@@ -3,4 +3,4 @@
 # hidden folders in the root directory
 /.*
 !/.gitignore
-!/.pre-commit-config.yaml
+__pycache__

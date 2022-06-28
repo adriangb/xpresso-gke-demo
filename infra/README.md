@@ -34,13 +34,11 @@ Enable the following APIs in GCP if they are not already enabled:
 
 - [Artifact Registry](https://cloud.google.com/artifact-registry/docs/enable-service#enable)
 - [Kubernetes Engine](https://cloud.google.com/kubernetes-engine/docs/quickstart#before-you-begin)
-- [Cloud SQL](https://cloud.google.com/sql/docs/mysql/admin-api#enable_the_api)
 
 If you've configured `gcloud` locally and pointed it at your project you can run:
 
 ```shell
 gcloud services enable artifactregistry.googleapis.com
-gcloud services enable sqladmin.googleapis.com
 gcloud services enable container.googleapis.com
 ```
 
@@ -70,9 +68,8 @@ pulumi stack init dev
 Set the required configuration variables for this program:
 
 ```shell
-pulumi config set xpresso-gke-demo:projectId [your-gcp-project-here]
-pulumi config set xpresso-gke-demo:region us-west1 # any valid region
-pulumi config set xpresso-gke-demo:appPort 8000  # unless you change the app
+pulumi config set gunicorn-vs-pods:projectId [your-gcp-project-here]
+pulumi config set gunicorn-vs-pods:appPort 8000  # unless you change the app
 ```
 
 ### Deploy
