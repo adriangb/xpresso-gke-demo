@@ -13,7 +13,7 @@ COPY ./app ./app/
 ENV PYTHONPATH "${PYTHONPATH}:/opt/project"
 
 FROM base as uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--log-level", "error"]
 
 FROM base as gunicorn
 CMD ["gunicorn", "--workers", "8", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80", "app.main:app"]

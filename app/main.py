@@ -1,7 +1,9 @@
+from contextlib import AsyncExitStack
 from typing import Annotated, AsyncIterator
 
 from httpx import AsyncClient
 from xpresso import App, Depends, FromQuery, Path
+from xpresso.responses import StreamingResponse, ResponseSpec
 
 
 def list_primes(n: int) -> list[int]:
@@ -16,29 +18,47 @@ def list_primes(n: int) -> list[int]:
     return [2] + [i for i in range(3, n, 2) if sieve[i]]
 
 
+async def filter_primes(
+    n: FromQuery[int],
+) -> list[int]:
+    return list_primes(n)
+
+
+async def get_stack() -> AsyncIterator[AsyncExitStack]:
+    async with AsyncExitStack() as stack:
+        yield stack
+
+
 async def get_client() -> AsyncIterator[AsyncClient]:
     async with AsyncClient() as client:
         yield client
 
 
 HTTPClient = Annotated[AsyncClient, Depends(get_client, scope="app")]
+Stack = Annotated[AsyncExitStack, Depends(get_stack, scope="connection")]
 
 
-async def filter_primes(
-    n: FromQuery[int],
+async def proxy_image(
     client: HTTPClient,
-) -> list[int]:
+    stack: Stack,
+) -> StreamingResponse:
     # do some IO
-    data = b"data " * 100
-    resp = await client.post(  # type: ignore
-        "https://httpbin.org/post",
-        content=data,
+    resp = await stack.enter_async_context(
+        client.stream(  # type: ignore
+            "GET",
+            "https://raw.githubusercontent.com/adriangb/xpresso/main/docs/assets/images/xpresso-title.png",
+        )
     )
-    resp.raise_for_status()
-    # burn some rubber
-    return list_primes(n)
+    return StreamingResponse(resp.aiter_bytes(), media_type="image/png")
 
 
 app = App(
-    routes=[Path("/primes", get=filter_primes)],
+    routes=[
+        Path("/primes", get=filter_primes),
+        Path(
+            "/image",
+            get=proxy_image,
+            responses={200: ResponseSpec(content={"image/png": bytes})},
+        ),
+    ],
 )
