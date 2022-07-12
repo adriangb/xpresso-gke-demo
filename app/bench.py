@@ -20,7 +20,7 @@ class AppConfig(BaseSettings):
 
 class BenchmarkParams(BaseModel):
     connections: int = 1024
-    threads: int = 32
+    threads: int = 16
     duration: int = 30
 
 

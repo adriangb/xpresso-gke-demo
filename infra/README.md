@@ -5,7 +5,6 @@ This example is a full end to end example of delivering a containerized Xpresso 
 The IaC part of this repo will take care of:
 
 - Provisioning a Google Kubernetes Engine (GKE) cluster
-- Provisioning a Cloud SQL managed PostgreSQL database
 - Build a containerized Python app and pushes it to Google Artifact Registry (GAR)
 - Deploys that the containerized app in the GKE cluster
 
@@ -91,3 +90,4 @@ pulumi stack rm
 ### Check
 
 If you log into the [GCP Console] and select your project, then go to `Kubernetes -> Workloads -> <the newly created deployment>` you'll find the public IP for your service.
+It will also be printed out after running `pulumi up`.

@@ -170,7 +170,7 @@ const benchmarkDeployment = new k8s.apps.v1.Deployment(
                 // Give this thing hella resources to make
                 // sure it's not the bottleneck / equalizer
                 requests: {
-                  cpu: "32",
+                  cpu: "1600m",
                   memory: "16Gi",
                 },
               },
