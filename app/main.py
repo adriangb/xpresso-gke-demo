@@ -60,7 +60,7 @@ async def proxy_image(
     resp = await stack.enter_async_context(
         client.stream(  # type: ignore
             "GET",
-            "https://raw.githubusercontent.com/adriangb/xpresso/main/docs/assets/images/xpresso-title.png",
+            "https://storage.googleapis.com/adriangb-public/image.png",
         )
     )
     return StreamingResponse(resp.aiter_bytes(), media_type="image/png")

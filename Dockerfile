@@ -17,3 +17,9 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--log-leve
 
 FROM base as gunicorn
 CMD ["gunicorn", "--workers", "8", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80", "app.main:app"]
+
+FROM base as bench
+COPY --from=golang:latest /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
+RUN GOBIN=/usr/local/bin/ go install github.com/adeven/go-wrk@latest
+CMD ["python", "app/bench.py"]
