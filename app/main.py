@@ -5,23 +5,33 @@ from httpx import AsyncClient
 from xpresso import App, Depends, FromQuery, Path
 from xpresso.responses import StreamingResponse, ResponseSpec
 
+def is_prime(n: int) -> bool:
+    if n <= 1:
+        return False
+    for i in range(2, n):
+        if n % i == 0:
+            return False
+    return True
 
-def list_primes(n: int) -> list[int]:
-    # https://stackoverflow.com/questions/2068372
-    """Returns  a list of primes < n"""
-    if n < 2:
-        return []
-    sieve = [True] * n
-    for i in range(3, int(n**0.5) + 1, 2):
-        if sieve[i]:
-            sieve[i * i :: 2 * i] = [False] * int(((n - i * i - 1) / (2 * i) + 1))
-    return [2] + [i for i in range(3, n, 2) if sieve[i]]
+
+def generate_primes_up_to(n: int) -> list[int]:
+    """Returns  a list of primes < n
+
+    This is _extremely_ inefficient but the goal here
+    is to burn CPU while not using much memory, so it is
+    exactly what we want.
+    """
+    return [i for i in range(n) if is_prime(i)]
 
 
 async def filter_primes(
     n: FromQuery[int],
 ) -> list[int]:
-    return list_primes(n)
+    """An extremely inefficient method to find prime numbers.
+
+    The goal of this endpoint is to simulate CPU bound work.
+    """
+    return [i for i in range(n) if is_prime(i)]
 
 
 async def get_stack() -> AsyncIterator[AsyncExitStack]:
@@ -42,6 +52,10 @@ async def proxy_image(
     client: HTTPClient,
     stack: Stack,
 ) -> StreamingResponse:
+    """An endpoint that simply proxies an image.
+
+    The goal of this endpoint is to simulate IO bound work.
+    """
     # do some IO
     resp = await stack.enter_async_context(
         client.stream(  # type: ignore
