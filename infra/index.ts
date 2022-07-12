@@ -84,7 +84,7 @@ const uvicornDeployment = new k8s.apps.v1.Deployment(
     provider: cluster.provider,
   }
 );
-export const uvicornService = new k8s.core.v1.Service(
+const uvicornService = new k8s.core.v1.Service(
   "uvicorn-service",
   {
     metadata: { labels: uvicornDeployment.metadata.labels },
@@ -96,6 +96,7 @@ export const uvicornService = new k8s.core.v1.Service(
   },
   { provider: cluster.provider}
 );
+export const uvicornAppAddress = uvicornService.status.apply(s => `http://${s.loadBalancer.ingress[0].ip}:80`);
 
 const gunicornDeployment = new k8s.apps.v1.Deployment(
   "gunicorn-deployment",
@@ -132,7 +133,7 @@ const gunicornDeployment = new k8s.apps.v1.Deployment(
     provider: cluster.provider,
   }
 );
-export const gunicornService = new k8s.core.v1.Service(
+const gunicornService = new k8s.core.v1.Service(
   "gunicorn-service",
   {
     metadata: { labels: gunicornDeployment.metadata.labels },
@@ -144,6 +145,7 @@ export const gunicornService = new k8s.core.v1.Service(
   },
   { provider: cluster.provider}
 );
+export const gunicornAppAddress = gunicornService.status.apply(s => `http://${s.loadBalancer.ingress[0].ip}:80`);
 
 const benchmarkDeployment = new k8s.apps.v1.Deployment(
   "bench-deployment",
@@ -165,11 +167,23 @@ const benchmarkDeployment = new k8s.apps.v1.Deployment(
               image: benchImage.imageName,
               ports: [{ containerPort: 80 }],
               resources: {
+                // Give this thing hella resources to make
+                // sure it's not the bottleneck / equalizer
                 requests: {
-                  cpu: "1000m",
-                  memory: "512m",
+                  cpu: "32",
+                  memory: "16Gi",
                 },
               },
+              env: [
+                {
+                  name: "GUNICORN_HOST",
+                  value: gunicornAppAddress,
+                },
+                {
+                  name: "UVICORN_HOST",
+                  value: uvicornAppAddress,
+                }
+              ]
             },
           ],
         },
@@ -180,8 +194,8 @@ const benchmarkDeployment = new k8s.apps.v1.Deployment(
     provider: cluster.provider,
   }
 );
-export const benchmarkService = new k8s.core.v1.Service(
-  "gunicorn-service",
+const benchmarkService = new k8s.core.v1.Service(
+  "bench-service",
   {
     metadata: { labels: benchmarkDeployment.metadata.labels },
     spec: {
@@ -192,3 +206,4 @@ export const benchmarkService = new k8s.core.v1.Service(
   },
   { provider: cluster.provider}
 );
+export const benchAppAddress = benchmarkService.status.apply(s => `http://${s.loadBalancer.ingress[0].ip}:80`);
